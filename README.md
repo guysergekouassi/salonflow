@@ -48,8 +48,13 @@ Après ça, **plus besoin d'internet** : tout tourne sur le PC (base SQLite, auc
 
 ## 2. Utilisation au quotidien
 
-- Double-cliquer sur **`demarrer-salon.bat`** (faites-en un raccourci sur le bureau).
-  Il démarre le serveur local dans une fenêtre réduite (ne pas la fermer) et ouvre la caisse dans Chrome.
+- **Une seule fois** : double-cliquer sur **`creer-raccourci.bat`**. Il crée l'icône **SalonFlow** (avec le logo du salon)
+  sur le bureau et dans le menu Démarrer. Clic droit sur l'icône → *Épingler à la barre des tâches* si on le souhaite.
+- **Chaque jour** : double-cliquer sur l'icône **SalonFlow**. Elle démarre le serveur local dans une fenêtre réduite
+  (ne pas la fermer) et ouvre la caisse dans sa propre fenêtre, avec le logo dans la barre des tâches.
+  Si la caisse est déjà ouverte, l'icône rouvre simplement la fenêtre.
+- Autre possibilité : dans Chrome, sur http://127.0.0.1:8000, menu ⋮ → *Caster, enregistrer et partager* →
+  *Installer la page en tant qu'application* (le serveur doit alors être démarré avec `demarrer-salon.bat`).
 - Première connexion : `gerante@salon.local` / `ChangeMoi!2026`.
   **Changer le mot de passe tout de suite** (menu en haut à droite → *Mon mot de passe*).
 - La gérante crée les comptes des assistantes dans **Comptes assistantes**.
@@ -155,5 +160,6 @@ public/css/app.css   styles (aucun CDN)
 public/js/caisse.js  écran de caisse
 resources/views/     caisse, tickets, dashboard, mes-kpi, ventes, services, comptes, auth
 demarrer-salon.bat   lance le serveur et la caisse
+creer-raccourci.bat  crée l'icône SalonFlow sur le bureau et dans le menu Démarrer
 sauvegarder.bat      sauvegarde de la base
 ```
