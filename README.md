@@ -76,7 +76,7 @@ Le bouton **Mode gérante · Fermer** en haut à droite le referme tout de suite
 - Cliquer sur une carte = +1 dans le ticket. Le badge vert sur la carte indique la quantité.
 - Dans le ticket : `+` / `−` pour la quantité, `✕` pour retirer une ligne, *Vider* pour tout effacer.
 - Recherche : taper le nom ou le code puis **Entrée** ajoute le premier résultat (touche `/` pour aller dans la recherche).
-- Paiement **Espèces / Mobile Money / Carte**. En espèces, saisir le montant reçu (ou un bouton billet) :
+- Paiement **en espèces uniquement**. Saisir le montant reçu (ou un bouton billet) :
   la monnaie à rendre s'affiche et l'encaissement est bloqué si le montant est insuffisant.
 - **Encaisser & imprimer** : la vente est enregistrée, le ticket s'imprime et la caisse est prête pour la cliente suivante.
 

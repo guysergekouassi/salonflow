@@ -45,8 +45,20 @@ class Vente extends Model
         return $this->annulee_at !== null;
     }
 
+    /** Libellés de tous les modes, y compris ceux qui ne sont plus proposés (anciens tickets) */
+    public const LIBELLES_PAIEMENT = [
+        'especes' => 'Espèces',
+        'mobile_money' => 'Mobile Money',
+        'carte' => 'Carte',
+    ];
+
+    public static function libellePaiement(string $mode): string
+    {
+        return config('salon.modes_paiement.'.$mode) ?? self::LIBELLES_PAIEMENT[$mode] ?? $mode;
+    }
+
     public function libelleModePaiement(): string
     {
-        return config('salon.modes_paiement.'.$this->mode_paiement, $this->mode_paiement);
+        return self::libellePaiement($this->mode_paiement);
     }
 }

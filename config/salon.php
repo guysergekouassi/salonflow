@@ -10,10 +10,9 @@ return [
     // Après le code PIN, le mode gérante (prix, annulations, vendeuses) reste ouvert X minutes
     'mode_gerante_minutes' => (int) env('SALON_MODE_GERANTE_MINUTES', 10),
 
+    // Modes de paiement acceptés à la caisse (le salon n'encaisse qu'en espèces)
     'modes_paiement' => [
         'especes' => 'Espèces',
-        'mobile_money' => 'Mobile Money',
-        'carte' => 'Carte',
     ],
 
     'ticket' => [

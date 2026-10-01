@@ -43,7 +43,7 @@ class KpiService
             'jours_semaine' => $this->parJourSemaine($ventes),
             'modes_paiement' => $ventes->groupBy('mode_paiement')
                 ->map(fn (Collection $v, string $mode) => [
-                    'libelle' => config('salon.modes_paiement.'.$mode, $mode),
+                    'libelle' => Vente::libellePaiement($mode),
                     'tickets' => $v->count(),
                     'ca' => $v->sum('total'),
                     'part' => $resume['ca'] > 0 ? round($v->sum('total') * 100 / $resume['ca']) : 0,

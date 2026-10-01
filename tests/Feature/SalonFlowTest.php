@@ -122,12 +122,29 @@ class SalonFlowTest extends TestCase
         $this->vendre($this->awa, [
             ['service_id' => $this->brushing->id, 'quantite' => 1],
             ['service_id' => $this->brushing->id, 'quantite' => 1],
-        ], 'mobile_money')->assertCreated();
+        ])->assertCreated();
 
         $vente = Vente::with('lignes')->first();
         $this->assertCount(1, $vente->lignes);
         $this->assertSame(2, $vente->lignes->first()->quantite);
-        $this->assertNull($vente->montant_recu);
+        $this->assertSame(6000, $vente->montant_recu); // montant exact par défaut
+        $this->assertSame(0, $vente->monnaie_rendue);
+    }
+
+    public function test_seules_les_especes_sont_acceptees(): void
+    {
+        $ligne = [['service_id' => $this->brushing->id, 'quantite' => 1]];
+
+        $this->vendre($this->awa, $ligne, 'mobile_money')->assertUnprocessable()->assertJsonValidationErrors('mode_paiement');
+        $this->vendre($this->awa, $ligne, 'carte')->assertUnprocessable()->assertJsonValidationErrors('mode_paiement');
+        $this->assertSame(0, Vente::count());
+
+        $this->get('/')->assertDontSee('Mobile Money')->assertDontSee('>Carte<', false);
+
+        // Un ancien ticket payé par Mobile Money garde son libellé dans l'historique
+        $ancien = Vente::create(['numero' => 'T-20261001-0099', 'vendeuse_id' => $this->awa->id, 'total' => 3000, 'mode_paiement' => 'mobile_money']);
+        $this->assertSame('Mobile Money', $ancien->libelleModePaiement());
+        $this->get('/ventes')->assertSee('Mobile Money');
     }
 
     public function test_les_numeros_de_ticket_se_suivent_et_repartent_chaque_jour(): void
@@ -246,7 +263,7 @@ class SalonFlowTest extends TestCase
 
         Carbon::setTestNow('2026-10-01 10:00:00');
         $this->vendre($this->awa, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
-        $this->vendre($this->fatou, [['service_id' => $this->brushing->id, 'quantite' => 1]], 'carte');
+        $this->vendre($this->fatou, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
 
         Carbon::setTestNow('2026-09-22 11:00:00');
         $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 2]]);

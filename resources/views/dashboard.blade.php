@@ -72,6 +72,8 @@
                 <div class="vide">Aucune vente sur la période.</div>
             @endforelse
 
+            {{-- Utile seulement si la période contient plusieurs modes (anciens tickets Mobile Money / Carte) --}}
+            @if(count($kpi['modes_paiement']) > 1)
             <h3 style="font-size:15px;margin:22px 0 12px">Modes de paiement</h3>
             @forelse($kpi['modes_paiement'] as $m)
                 <div class="liste-barres" style="margin-bottom:12px">
@@ -83,6 +85,7 @@
             @empty
                 <div class="muted small">—</div>
             @endforelse
+            @endif
         </div>
     </div>
 </div>

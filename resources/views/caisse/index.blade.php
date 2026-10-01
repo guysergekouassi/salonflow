@@ -73,7 +73,8 @@
         <div class="ticket-pied">
             <div class="total"><span>TOTAL</span><b id="total">0 FCFA</b></div>
 
-            <div class="modes">
+            {{-- Un seul mode (espèces) : pas de choix à afficher --}}
+            <div class="modes" @if(count(config('salon.modes_paiement')) === 1) hidden @endif>
                 @foreach(config('salon.modes_paiement') as $code => $libelle)
                     <label><input type="radio" name="mode" value="{{ $code }}" @checked($loop->first)><span>{{ $libelle }}</span></label>
                 @endforeach
