@@ -10,6 +10,10 @@ return [
     // Après le code PIN, le mode gérante (prix, annulations, vendeuses) reste ouvert X minutes
     'mode_gerante_minutes' => (int) env('SALON_MODE_GERANTE_MINUTES', 10),
 
+    // Version de démonstration en ligne : bandeau, code PIN affiché, pas d'impression automatique,
+    // code PIN non modifiable et données remises à zéro chaque nuit (php artisan salon:demo --fresh)
+    'demo' => (bool) env('SALON_DEMO', false),
+
     // Modes de paiement acceptés à la caisse (le salon n'encaisse qu'en espèces)
     'modes_paiement' => [
         'especes' => 'Espèces',

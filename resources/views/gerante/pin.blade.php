@@ -10,6 +10,7 @@
         <img class="logo-image" src="{{ asset('images/logo.jpg') }}" alt="" width="64" height="64">
         <h2>Code PIN de la gérante</h2>
         <p class="muted small">Pour modifier les prix et services, annuler un ticket ou gérer les vendeuses.</p>
+        @if($demo)<p class="alerte alerte-info small">Démo : le code est <b>1234</b></p>@endif
 
         <input type="password" name="pin" id="pin" inputmode="numeric" autocomplete="off" maxlength="8"
                class="pin-saisie" placeholder="••••" autofocus required>

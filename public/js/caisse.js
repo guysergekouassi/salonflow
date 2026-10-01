@@ -1,6 +1,6 @@
 // Caisse : le ticket vit dans le navigateur, le serveur recalcule les prix à l'encaissement.
 (function () {
-    const { services, url, csrf, vendeuses, jour } = window.CAISSE;
+    const { services, url, csrf, vendeuses, jour, demo } = window.CAISSE;
     const parId = new Map(services.map((s) => [s.id, s]));
     // Lignes du ticket : clé "id" (prix fixe) ou "id@prix" (prix variable saisi) -> { id, prix, quantite }
     const panier = new Map();
@@ -280,8 +280,14 @@
                 throw new Error(erreurs[0] || donnees.message || 'Erreur lors de l\'enregistrement.');
             }
 
-            // Impression dans un cadre caché : la caisse reste ouverte, prête pour le client suivant
-            el('impression').src = donnees.ticket_url + '&cadre=1';
+            if (demo) {
+                // Démo : aperçu du ticket à l'écran, sans fenêtre d'impression
+                el('apercu-cadre').src = donnees.ticket_url.replace('imprimer=1', 'imprimer=0') + '&cadre=1';
+                el('apercu-ticket').hidden = false;
+            } else {
+                // Impression dans un cadre caché : la caisse reste ouverte, prête pour le client suivant
+                el('impression').src = donnees.ticket_url + '&cadre=1';
+            }
             majKpiJour(donnees.total);
             panier.clear();
             vider();
@@ -298,6 +304,7 @@
     }
 
     el('encaisser').addEventListener('click', encaisser);
+    if (demo) el('apercu-fermer').addEventListener('click', () => { el('apercu-ticket').hidden = true; });
 
     // Raccourcis clavier : / pour rechercher, Entrée dans la recherche = ajoute le premier résultat
     document.addEventListener('keydown', (e) => {

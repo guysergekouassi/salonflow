@@ -123,6 +123,18 @@
 </dialog>
 
 <iframe id="impression" title="Impression du ticket" style="position:absolute;width:0;height:0;border:0;visibility:hidden"></iframe>
+@if($demo)
+    {{-- Démo : le ticket s'affiche à l'écran au lieu de partir sur l'imprimante --}}
+    <div class="apercu-ticket" id="apercu-ticket" hidden>
+        <div class="apercu-boite">
+            <div class="apercu-titre">
+                <b>Aperçu du ticket</b>
+                <button class="btn" type="button" id="apercu-fermer">Fermer</button>
+            </div>
+            <iframe id="apercu-cadre" title="Aperçu du ticket"></iframe>
+        </div>
+    </div>
+@endif
 @endsection
 
 @push('scripts')
@@ -133,6 +145,7 @@
         csrf: @json(csrf_token()),
         vendeuses: @json($vendeuses->pluck('id')),
         jour: @json($jour),
+        demo: @json($demo),
     };
 </script>
 <script src="{{ asset('js/caisse.js') }}?v={{ filemtime(public_path('js/caisse.js')) }}"></script>

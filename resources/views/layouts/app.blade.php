@@ -61,6 +61,13 @@
             @endif
         </header>
 
+        @if($demo)
+            <div class="bandeau-demo">
+                <b>Version de démonstration</b> — les ventes sont fictives et remises à zéro chaque nuit.
+                Code PIN gérante : <b>1234</b>
+            </div>
+        @endif
+
         <main class="contenu">
             @unless(View::hasSection('sans-alertes'))
                 @if(session('succes'))<div class="alerte alerte-succes">{{ session('succes') }}</div>@endif

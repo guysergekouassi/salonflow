@@ -1,0 +1,12 @@
+# Démo en ligne sur Render : New + → Blueprint → choisir ce dépôt
+services:
+  - type: web
+    name: salonflow-demo
+    runtime: docker
+    plan: free
+    healthCheckPath: /up
+    envVars:
+      - key: SALON_NOM
+        value: Salon Démo
+      - key: SALON_ADRESSE
+        value: Cocody, Abidjan

@@ -3,7 +3,8 @@
     $largeur = config('salon.ticket.largeur_mm') === 58 ? 58 : 80;
     $a4 = config('salon.ticket.papier') === 'a4';
     $cadre = request()->boolean('cadre');
-    $autoImpression = request()->boolean('imprimer') && config('salon.ticket.driver') === 'navigateur';
+    // En démo, le visiteur voit l'aperçu du ticket au lieu de la fenêtre d'impression
+    $autoImpression = request()->boolean('imprimer') && config('salon.ticket.driver') === 'navigateur' && ! config('salon.demo');
 @endphp
 <!DOCTYPE html>
 <html lang="fr">

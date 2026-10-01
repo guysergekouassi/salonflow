@@ -68,6 +68,11 @@
 
         <div class="carte">
             <div class="carte-titre"><h3>@include('partials.icone', ['nom' => 'cle']) Changer le code PIN</h3></div>
+            @if($demo)
+            <div class="carte-corps">
+                <p class="muted" style="margin:0">Version de démonstration : le code PIN reste <b>1234</b> pour tous les visiteurs.</p>
+            </div>
+            @else
             <form method="POST" action="{{ route('parametres.pin') }}" class="carte-corps">
                 @csrf @method('PUT')
                 <div class="champ">
@@ -82,6 +87,7 @@
                 <button class="btn btn-primaire" type="submit">Enregistrer le code</button>
                 <p class="muted small" style="margin:12px 0 0">Code oublié ? Sur le PC : <code>php artisan salon:pin 1234</code></p>
             </form>
+            @endif
         </div>
     </div>
 </div>

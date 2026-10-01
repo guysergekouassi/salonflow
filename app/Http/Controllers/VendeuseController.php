@@ -46,6 +46,11 @@ class VendeuseController extends Controller
 
     public function pin(Request $request, PinService $pin): RedirectResponse
     {
+        // En démo, le code reste 1234 pour tous les visiteurs
+        if (config('salon.demo')) {
+            return back()->with('erreur', 'Version de démonstration : le code PIN ne peut pas être changé.');
+        }
+
         $data = $request->validate([
             'pin' => ['required', 'confirmed', 'regex:/^[0-9]{4,8}$/'],
         ], [

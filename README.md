@@ -167,6 +167,42 @@ numérotation des tickets (`T-AAAAMMJJ-0001`, remise à zéro chaque jour), esp�
 actions sensibles bloquées sans code PIN, mauvais code refusé, expiration du mode gérante, limite d'essais,
 gestion des vendeuses et du code, KPI jour / semaine / dates et évolution, tickets annulés exclus, gestion des services.
 
+## 7. Version de démonstration en ligne
+
+Une copie de la caisse peut être mise en ligne pour la montrer à des clients, **sans toucher à la caisse du salon**.
+Avec `SALON_DEMO=true` :
+
+- un bandeau « Version de démonstration » s'affiche, avec le code PIN gérante (`1234`) ;
+- la base est remplie de ventes fictives (vendeuses Awa, Fatou, Mariam, Aïcha, 60 jours de ventes) pour que
+  les KPI, graphiques et historiques soient parlants ;
+- après l'encaissement, le ticket s'affiche à l'écran (aperçu) au lieu de partir sur l'imprimante ;
+- le code PIN ne peut pas être changé ;
+- la base repart de zéro **chaque nuit à 3 h** et à chaque redémarrage du serveur.
+
+**Sur Render (gratuit)** : créer un compte sur [render.com](https://render.com), relier GitHub, puis
+*New + → Blueprint* et choisir ce dépôt. Le fichier `render.yaml` crée le service, qui est construit avec le `Dockerfile`.
+L'adresse de la démo s'affiche ensuite (`https://salonflow-demo.onrender.com` ou proche). Sur l'offre gratuite,
+le service s'endort après 15 minutes sans visite : la première ouverture prend alors environ une minute
+(et la démo repart de zéro).
+
+**Ailleurs** (Railway, Fly.io, un VPS…) : le `Dockerfile` fonctionne tel quel, le serveur écoute sur le port `PORT`
+(8080 par défaut). En local avec Docker :
+
+```bash
+docker build -t salonflow-demo .
+docker run -p 8080:8080 salonflow-demo     # puis http://localhost:8080
+```
+
+**Sans Docker**, sur un PC de test (jamais sur celui du salon) : mettre `SALON_DEMO=true` dans `.env`, puis
+
+```bash
+php artisan salon:demo --fresh     # efface la base et génère les ventes de démo
+php artisan serve
+```
+
+La commande `salon:demo` refuse de s'exécuter si `SALON_DEMO` n'est pas activé, pour ne jamais mélanger
+de fausses ventes avec la vraie caisse.
+
 ## Arborescence
 
 ```
@@ -175,6 +211,7 @@ app/
   Http/Middleware/   ModeGerante (actions protégées par le code PIN)
   Models/            Vendeuse, Categorie, Service, Vente, VenteLigne, Parametre
   Services/          VenteService, KpiService, PinService, TicketService (ESC/POS)
+  Console/Commands/  SalonDemo (php artisan salon:demo)
   Support/           Fcfa, Periode
 config/salon.php     nom du salon, ticket, modes de paiement, durée du mode gérante
 public/css/app.css   styles (aucun CDN)
@@ -183,4 +220,6 @@ resources/views/     caisse, tickets, dashboard, ventes, services, parametres, g
 demarrer-salon.bat   lance le serveur et la caisse
 creer-raccourci.bat  crée l'icône SalonFlow sur le bureau et dans le menu Démarrer
 sauvegarder.bat      sauvegarde de la base
+Dockerfile           version de démonstration en ligne (docker/demarrer-demo.sh au démarrage)
+render.yaml          déploiement de la démo sur Render
 ```
