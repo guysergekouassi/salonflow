@@ -11,9 +11,16 @@ La gérante suit ses ventes (jour, semaine, mois) avec des KPI clairs.
 
 ## 1. Installation sur le PC du salon (une seule fois, avec internet)
 
-1. Installer **[Laragon](https://laragon.org/download/)** (version « Full »). Il fournit PHP 8.3+ et Composer.
-   Vérifier dans un terminal Laragon : `php -v` affiche 8.3 ou plus.
-2. Copier le dossier du projet, par exemple dans `C:\SalonFlow`, puis dans le terminal Laragon :
+1. Avoir **PHP 8.3 ou plus** et **Composer**.
+   - **XAMPP** : vérifier `C:\xampp\php\php.exe -v`. Si la version est 8.2 ou moins, installer une version récente de XAMPP
+     (ou un PHP 8.3+ de [windows.php.net](https://windows.php.net/download/)). Installer ensuite
+     [Composer](https://getcomposer.org/Composer-Setup.exe) en lui indiquant ce `php.exe`, puis ajouter le dossier de PHP
+     (ex. `C:\xampp\php`) au **PATH** de Windows.
+   - **Laragon** : PHP et Composer sont fournis (Menu → Tools → Path → *Add Laragon to Path*).
+   - Dans `php.ini`, retirer le `;` devant `extension=pdo_sqlite`, `extension=sqlite3`, `extension=fileinfo` et
+     `extension=zip`. Vérifier avec `php -m` : `pdo_sqlite` doit apparaître.
+   - Apache et MySQL ne servent pas : la caisse utilise SQLite et son propre petit serveur.
+2. Copier le dossier du projet, par exemple dans `C:\SalonFlow` (ou `C:\xampp\htdocs\salonflow`), puis dans un terminal :
 
 ```bash
 cd C:\SalonFlow
