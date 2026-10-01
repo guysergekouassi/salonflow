@@ -72,7 +72,7 @@ class DatabaseSeeder extends Seeder
         }
 
         if ($pin->verifier('1234')) {
-            $this->command?->warn('Code PIN gérante : 1234 — changez-le dans Paramètres dès la première utilisation.');
+            $this->command?->warn('Code PIN gérante : 1234 — changez-le dans « Vendeuses & code PIN » dès la première utilisation.');
         }
     }
 }
