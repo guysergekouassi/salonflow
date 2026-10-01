@@ -15,42 +15,39 @@
 @if($errors->any())<div class="alerte alerte-erreur">{{ $errors->first() }}</div>@endif
 
 <div class="grille-dash">
-    <div class="carte">
-        <form method="GET" class="carte-titre" style="gap:10px">
-            <input type="search" name="q" value="{{ request('q') }}" placeholder="Rechercher un service…">
-            <select name="categorie_id" style="width:auto" onchange="this.form.submit()">
-                <option value="">Toutes les catégories</option>
-                @foreach($categories as $c)<option value="{{ $c->id }}" @selected(request('categorie_id') == $c->id)>{{ $c->nom }}</option>@endforeach
-            </select>
-            <button class="btn btn-petit" type="submit">Filtrer</button>
-        </form>
-        @if($services->isEmpty())
-            <div class="vide">Aucun service.</div>
-        @else
-        <div style="overflow-x:auto">
-        <table class="tableau">
-            <thead><tr><th>Code</th><th>Service</th><th>Catégorie</th><th class="right">Prix</th><th>Caisse</th><th class="right"></th></tr></thead>
+    <div>
+        <table class="tableau" data-tableau data-titre="Liste des services" data-fichier="services" data-par-page="25">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Service</th>
+                    <th>Catégorie</th>
+                    <th class="right">Prix</th>
+                    <th>Statut</th>
+                    <th data-tri="non" data-export="non">Actions</th>
+                </tr>
+            </thead>
             <tbody>
             @foreach($services as $service)
                 <tr>
-                    <td class="mono small">{{ $service->code }}</td>
+                    <td class="mono small nowrap">{{ $service->code }}</td>
                     <td><b>{{ $service->nom }}</b></td>
-                    <td><span class="pastille" style="background:{{ $service->categorie->couleur }}"></span>{{ $service->categorie->nom }}</td>
-                    <td class="right nowrap" style="color:var(--vert);font-weight:800">{{ Fcfa::format($service->prix) }}</td>
+                    <td><span class="badge" style="background: {{ $service->categorie->couleur }}1f; color: {{ $service->categorie->couleur }}">{{ $service->categorie->nom }}</span></td>
+                    <td class="right nowrap" style="color:var(--vert);font-weight:800" data-tri="{{ $service->prix }}" data-export="{{ $service->prix }}">{{ Fcfa::format($service->prix) }}</td>
                     <td>@if($service->actif)<span class="badge badge-vert">Visible</span>@else<span class="badge badge-gris">Masqué</span>@endif</td>
-                    <td class="right nowrap">
-                        <a class="btn btn-petit" href="{{ route('services.edit', $service) }}">@include('partials.icone', ['nom' => 'crayon']) Modifier</a>
-                        <form method="POST" action="{{ route('services.destroy', $service) }}" style="display:inline" onsubmit="return confirm('Supprimer « {{ addslashes($service->nom) }} » ? Les anciens tickets restent intacts.')">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-petit btn-rouge" type="submit" aria-label="Supprimer">@include('partials.icone', ['nom' => 'poubelle'])</button>
-                        </form>
+                    <td>
+                        <div class="actions">
+                            <a class="btn-ico btn-modifier" href="{{ route('services.edit', $service) }}" title="Modifier">@include('partials.icone', ['nom' => 'modifier'])</a>
+                            <form method="POST" action="{{ route('services.destroy', $service) }}" onsubmit="return confirm('Supprimer « {{ addslashes($service->nom) }} » ? Les anciens tickets restent intacts.')">
+                                @csrf @method('DELETE')
+                                <button class="btn-ico btn-supprimer" type="submit" title="Supprimer">@include('partials.icone', ['nom' => 'poubelle'])</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @endforeach
             </tbody>
         </table>
-        </div>
-        @endif
     </div>
 
     <div class="carte">

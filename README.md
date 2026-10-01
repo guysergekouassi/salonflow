@@ -105,6 +105,8 @@ Pour une période en cours, l'évolution compare la **même durée écoulée** :
 jeudi 18 h la semaine dernière, et pas contre la semaine dernière entière.
 
 **Historique des ventes** : tous les tickets, filtrables par période, par personne ou par statut. On peut les réimprimer.
+Comme toutes les listes (services, comptes), le tableau permet de rechercher, trier en cliquant sur une colonne,
+choisir le nombre de lignes affichées et **exporter** en CSV (s'ouvre dans Excel).
 Un ticket annulé (avec motif obligatoire) reste visible mais ne compte plus dans les KPI.
 Seule la gérante peut annuler un ticket.
 

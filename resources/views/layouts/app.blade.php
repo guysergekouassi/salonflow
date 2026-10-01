@@ -91,6 +91,7 @@
         document.getElementById('horloge').textContent = new Date().toLocaleTimeString('fr-FR');
     }, 1000);
 </script>
+<script src="{{ asset('js/tableau.js') }}?v={{ filemtime(public_path('js/tableau.js')) }}"></script>
 @stack('scripts')
 </body>
 </html>

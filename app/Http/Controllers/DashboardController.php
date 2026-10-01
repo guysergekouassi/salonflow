@@ -13,6 +13,9 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    /** Au-delà, la gérante affine la période : la recherche et le tri se font dans le navigateur */
+    public const MAX_LIGNES = 5000;
+
     public function index(Request $request, KpiService $kpi): View
     {
         $periode = $this->periode($request);
@@ -34,8 +37,8 @@ class DashboardController extends Controller
             ->when($request->integer('user_id'), fn ($q, $id) => $q->where('user_id', $id))
             ->when($request->input('statut') === 'annulees', fn ($q) => $q->whereNotNull('annulee_at'))
             ->latest()
-            ->paginate(25)
-            ->withQueryString();
+            ->limit(self::MAX_LIGNES)
+            ->get();
 
         return view('ventes.index', [
             'periode' => $periode,

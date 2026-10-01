@@ -65,28 +65,25 @@
     </div>
 </div>
 
-<div class="carte">
-    <div class="carte-titre"><h3>Mes tickets du jour</h3></div>
-    @if($tickets->isEmpty())
-        <div class="vide">Aucun ticket aujourd'hui.</div>
-    @else
-        <table class="tableau">
-            <thead><tr><th>Ticket</th><th>Heure</th><th>Paiement</th><th class="right">Total</th><th></th></tr></thead>
-            <tbody>
-            @foreach($tickets as $vente)
-                <tr class="{{ $vente->estAnnulee() ? 'annule' : '' }}">
-                    <td class="mono"><b>{{ $vente->numero }}</b></td>
-                    <td>{{ $vente->created_at->format('H:i') }}</td>
-                    <td>{{ $vente->libelleModePaiement() }}</td>
-                    <td class="right"><b>{{ Fcfa::format($vente->total) }}</b></td>
-                    <td class="right garder">
-                        @if($vente->estAnnulee())<span class="badge badge-rouge">Annulé</span>@endif
-                        <a class="btn btn-petit" href="{{ route('tickets.show', $vente) }}">Réimprimer</a>
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    @endif
-</div>
+<table class="tableau" data-tableau data-titre="Mes tickets du jour" data-fichier="mes-tickets">
+    <thead>
+        <tr><th>Ticket</th><th>Heure</th><th>Paiement</th><th class="right">Total</th><th>Statut</th><th data-tri="non" data-export="non">Actions</th></tr>
+    </thead>
+    <tbody>
+    @foreach($tickets as $vente)
+        <tr class="{{ $vente->estAnnulee() ? 'annule' : '' }}">
+            <td class="mono"><b class="barre-texte">{{ $vente->numero }}</b></td>
+            <td data-tri="{{ $vente->created_at->timestamp }}">{{ $vente->created_at->format('H:i') }}</td>
+            <td><span class="badge badge-bleu">{{ $vente->libelleModePaiement() }}</span></td>
+            <td class="right nowrap" data-tri="{{ $vente->total }}" data-export="{{ $vente->total }}"><b class="barre-texte">{{ Fcfa::format($vente->total) }}</b></td>
+            <td>@if($vente->estAnnulee())<span class="badge badge-rouge">Annulé</span>@else<span class="badge badge-vert">Validé</span>@endif</td>
+            <td>
+                <div class="actions">
+                    <a class="btn-ico btn-voir" href="{{ route('tickets.show', $vente) }}" title="Voir / réimprimer">@include('partials.icone', ['nom' => 'oeil'])</a>
+                </div>
+            </td>
+        </tr>
+    @endforeach
+    </tbody>
+</table>
 @endsection

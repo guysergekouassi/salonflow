@@ -11,12 +11,10 @@ use Illuminate\View\View;
 
 class ServiceController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
+        // Recherche, tri et pagination se font dans le tableau (public/js/tableau.js)
         $services = Service::with('categorie')
-            ->when($request->input('q'), fn ($q, $texte) => $q->where(fn ($w) => $w
-                ->where('nom', 'like', "%{$texte}%")->orWhere('code', 'like', "%{$texte}%")))
-            ->when($request->integer('categorie_id'), fn ($q, $id) => $q->where('categorie_id', $id))
             ->orderBy('categorie_id')->orderBy('ordre')->orderBy('nom')
             ->get();
 

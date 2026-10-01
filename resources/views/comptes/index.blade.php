@@ -11,37 +11,47 @@
 </div>
 
 <div class="grille-dash">
-    <div class="carte">
-        @if($assistantes->isEmpty())
-            <div class="vide">Aucune assistante pour le moment.</div>
-        @else
-        <table class="tableau">
-            <thead><tr><th>Nom</th><th>E-mail</th><th>Tickets</th><th>Statut</th><th class="right">Actions</th></tr></thead>
+    <div>
+        @error('password')<div class="alerte alerte-erreur">{{ $message }}</div>@enderror
+        <table class="tableau" data-tableau data-titre="Liste des assistantes" data-fichier="assistantes">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>E-mail</th>
+                    <th class="right">Tickets</th>
+                    <th>Statut</th>
+                    <th data-tri="non" data-export="non">Actions</th>
+                </tr>
+            </thead>
             <tbody>
             @foreach($assistantes as $a)
                 <tr>
                     <td><b>{{ $a->name }}</b></td>
                     <td>{{ $a->email }}</td>
-                    <td>{{ $a->ventes_count }}</td>
+                    <td class="right">{{ $a->ventes_count }}</td>
                     <td>@if($a->actif)<span class="badge badge-vert">Actif</span>@else<span class="badge badge-gris">Désactivé</span>@endif</td>
-                    <td class="right nowrap">
-                        <form method="POST" action="{{ route('comptes.mot-de-passe', $a) }}" style="display:inline"
-                              onsubmit="const m = prompt('Nouveau mot de passe pour {{ addslashes($a->name) }} (6 caractères minimum) :'); if (!m) return false; this.password.value = m;">
-                            @csrf @method('PUT')
-                            <input type="hidden" name="password">
-                            <button class="btn btn-petit" type="submit">@include('partials.icone', ['nom' => 'cle']) Mot de passe</button>
-                        </form>
-                        <form method="POST" action="{{ route('comptes.activation', $a) }}" style="display:inline">
-                            @csrf @method('PATCH')
-                            <button class="btn btn-petit {{ $a->actif ? 'btn-rouge' : '' }}" type="submit">{{ $a->actif ? 'Désactiver' : 'Réactiver' }}</button>
-                        </form>
+                    <td>
+                        <div class="actions">
+                            <form method="POST" action="{{ route('comptes.mot-de-passe', $a) }}"
+                                  onsubmit="const m = prompt('Nouveau mot de passe pour {{ addslashes($a->name) }} (6 caractères minimum) :'); if (!m) return false; this.password.value = m;">
+                                @csrf @method('PUT')
+                                <input type="hidden" name="password">
+                                <button class="btn-ico btn-modifier" type="submit" title="Changer le mot de passe">@include('partials.icone', ['nom' => 'cle'])</button>
+                            </form>
+                            <form method="POST" action="{{ route('comptes.activation', $a) }}">
+                                @csrf @method('PATCH')
+                                @if($a->actif)
+                                    <button class="btn-ico btn-supprimer" type="submit" title="Désactiver le compte">@include('partials.icone', ['nom' => 'interdit'])</button>
+                                @else
+                                    <button class="btn-ico btn-activer" type="submit" title="Réactiver le compte">@include('partials.icone', ['nom' => 'valider'])</button>
+                                @endif
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @endforeach
             </tbody>
         </table>
-        @endif
-        @error('password')<div class="alerte alerte-erreur" style="margin:16px">{{ $message }}</div>@enderror
     </div>
 
     <div class="carte">
