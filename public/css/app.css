@@ -330,6 +330,15 @@ body.page-caisse .contenu { padding: 0; display: flex; min-height: 0; }
 .service .nom { font-weight: 800; font-size: 16px; margin: 3px 0 8px; line-height: 1.25; flex: 1; }
 .service .prix { color: var(--vert); font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; }
 .service.ajout { animation: pulse .3s; }
+.service .prix small { display: block; font-size: 11px; font-weight: 700; color: var(--gris); text-transform: uppercase; letter-spacing: .04em; }
+.dialogue-prix { border: 0; border-radius: 16px; padding: 24px; width: min(420px, calc(100vw - 32px)); box-shadow: var(--ombre-forte); }
+.dialogue-prix::backdrop { background: rgba(11, 42, 74, .45); }
+.dialogue-prix h3 { font-size: 20px; margin-bottom: 4px; }
+.dialogue-prix input { font-size: 26px; font-weight: 800; text-align: right; margin: 8px 0 12px; }
+.dp-rapides { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px; }
+.dp-rapides button { padding: 10px; border-radius: 10px; border: 1px solid var(--bord); background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.dp-rapides button:hover { background: var(--fond); }
+.dp-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 @keyframes pulse { 50% { transform: scale(1.04); } }
 
 .ticket-panneau {

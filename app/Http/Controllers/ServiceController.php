@@ -75,6 +75,7 @@ class ServiceController extends Controller
         $data['code'] = mb_strtoupper($data['code']);
         $data['ordre'] = $data['ordre'] ?? 0;
         $data['actif'] = $request->boolean('actif');
+        $data['prix_variable'] = $request->boolean('prix_variable');
 
         return $data;
     }

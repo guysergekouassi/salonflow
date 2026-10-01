@@ -2,7 +2,8 @@
 (function () {
     const { services, url, csrf, vendeuses, jour } = window.CAISSE;
     const parId = new Map(services.map((s) => [s.id, s]));
-    const panier = new Map(); // id du service -> quantité
+    // Lignes du ticket : clé "id" (prix fixe) ou "id@prix" (prix variable saisi) -> { id, prix, quantite }
+    const panier = new Map();
     let categorie = '';
     let envoiEnCours = false;
 
@@ -37,14 +38,19 @@
             <div class="infos">
                 <span class="code">${echapper(s.code)}</span>
                 <span class="nom">${echapper(s.nom)}</span>
-                <span class="prix">${fcfa(s.prix)}</span>
+                <span class="prix">${s.variable ? '<small>à partir de</small>' : ''}${fcfa(s.prix)}</span>
             </div>
         </button>`).join('');
 
     grille.addEventListener('click', (e) => {
         const carte = e.target.closest('.service');
         if (!carte) return;
-        ajouter(Number(carte.dataset.id));
+        const service = parId.get(Number(carte.dataset.id));
+        if (service.variable) {
+            demanderPrix(service);
+        } else {
+            ajouter(String(service.id));
+        }
         carte.classList.remove('ajout');
         void carte.offsetWidth; // relance l'animation
         carte.classList.add('ajout');
@@ -71,17 +77,57 @@
         filtrer();
     });
 
+    // ---------- Prix variable (« à partir de ») : on demande le prix réel ----------
+    const dialogue = el('dialogue-prix');
+    let serviceEnCours = null;
+
+    function demanderPrix(service) {
+        serviceEnCours = service;
+        el('dp-nom').textContent = service.nom;
+        el('dp-minimum').textContent = fcfa(service.prix);
+        el('dp-prix').min = service.prix;
+        el('dp-prix').value = service.prix;
+        el('dp-erreur').textContent = '';
+        el('dp-rapides').innerHTML = [0, 2000, 5000, 10000]
+            .map((plus) => `<button type="button" data-prix="${service.prix + plus}">${fcfa(service.prix + plus)}</button>`).join('');
+        dialogue.showModal();
+        el('dp-prix').select();
+    }
+
+    el('dp-rapides').addEventListener('click', (e) => {
+        const bouton = e.target.closest('button[data-prix]');
+        if (bouton) { el('dp-prix').value = bouton.dataset.prix; el('dp-erreur').textContent = ''; el('dp-prix').focus(); }
+    });
+    el('dp-prix').addEventListener('input', () => { el('dp-erreur').textContent = ''; });
+    el('dp-annuler').addEventListener('click', () => dialogue.close());
+    el('dp-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const prix = Math.round(Number(el('dp-prix').value));
+        if (!prix || prix < serviceEnCours.prix) {
+            el('dp-erreur').textContent = 'Le prix doit être d\'au moins ' + fcfa(serviceEnCours.prix) + '.';
+            return;
+        }
+        dialogue.close();
+        ajouter(serviceEnCours.id + '@' + prix, 1, prix);
+    });
+
     // ---------- Ticket ----------
-    function ajouter(id, delta = 1) {
-        const quantite = (panier.get(id) || 0) + delta;
-        if (quantite <= 0) panier.delete(id); else panier.set(id, Math.min(quantite, 99));
+    function ajouter(cle, delta = 1, prixSaisi = null) {
+        let ligne = panier.get(cle);
+        if (!ligne) {
+            const id = Number(cle.split('@')[0]);
+            ligne = { id, prix: prixSaisi ?? parId.get(id).prix, quantite: 0 };
+            panier.set(cle, ligne);
+        }
+        ligne.quantite = Math.min(ligne.quantite + delta, 99);
+        if (ligne.quantite <= 0) panier.delete(cle);
         el('message').textContent = '';
         afficher();
     }
 
     function total() {
         let t = 0;
-        panier.forEach((q, id) => { t += parId.get(id).prix * q; });
+        panier.forEach((l) => { t += l.prix * l.quantite; });
         return t;
     }
 
@@ -95,25 +141,27 @@
         el('ticket-vide').hidden = panier.size > 0;
         el('vider').hidden = panier.size === 0;
 
-        panier.forEach((q, id) => {
-            const s = parId.get(id);
+        const parService = new Map();
+        panier.forEach((l, cle) => {
+            const s = parId.get(l.id);
+            parService.set(l.id, (parService.get(l.id) || 0) + l.quantite);
             const ligne = document.createElement('div');
             ligne.className = 'tligne';
             ligne.innerHTML = `
-                <div class="desc"><b>${echapper(s.nom)}</b><small>${fcfa(s.prix)}</small></div>
+                <div class="desc"><b>${echapper(s.nom)}</b><small>${fcfa(l.prix)}${s.variable ? ' · prix saisi' : ''}</small></div>
                 <div class="quantite">
                     <button type="button" data-action="moins" aria-label="Retirer un">−</button>
-                    <span>${q}</span>
+                    <span>${l.quantite}</span>
                     <button type="button" data-action="plus" aria-label="Ajouter un">+</button>
                 </div>
-                <div class="montant">${fcfa(s.prix * q)}</div>
+                <div class="montant">${fcfa(l.prix * l.quantite)}</div>
                 <button type="button" class="suppr" data-action="suppr" aria-label="Supprimer la ligne">✕</button>`;
-            ligne.dataset.id = id;
+            ligne.dataset.cle = cle;
             lignes.appendChild(ligne);
         });
 
         grille.querySelectorAll('.service').forEach((carte) => {
-            const q = panier.get(Number(carte.dataset.id)) || 0;
+            const q = parService.get(Number(carte.dataset.id)) || 0;
             carte.classList.toggle('dans-ticket', q > 0);
             carte.querySelector('.qte').textContent = q ? '×' + q : '';
         });
@@ -125,11 +173,11 @@
     el('lignes').addEventListener('click', (e) => {
         const bouton = e.target.closest('button[data-action]');
         if (!bouton) return;
-        const id = Number(bouton.closest('.tligne').dataset.id);
+        const cle = bouton.closest('.tligne').dataset.cle;
         const action = bouton.dataset.action;
-        if (action === 'plus') ajouter(id, 1);
-        if (action === 'moins') ajouter(id, -1);
-        if (action === 'suppr') { panier.delete(id); afficher(); }
+        if (action === 'plus') ajouter(cle, 1);
+        if (action === 'moins') ajouter(cle, -1);
+        if (action === 'suppr') { panier.delete(cle); afficher(); }
     });
 
     el('vider').addEventListener('click', () => {
@@ -213,7 +261,11 @@
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
                 body: JSON.stringify({
                     vendeuse_id: vendeuse,
-                    lignes: [...panier].map(([service_id, quantite]) => ({ service_id, quantite })),
+                    lignes: [...panier.values()].map((l) => ({
+                        service_id: l.id,
+                        quantite: l.quantite,
+                        prix: parId.get(l.id).variable ? l.prix : null,
+                    })),
                     mode_paiement: modePaiement(),
                     montant_recu: especes && el('recu').value !== '' ? Number(el('recu').value) : null,
                 }),

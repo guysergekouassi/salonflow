@@ -48,6 +48,11 @@
         </div>
 
         <div class="champ">
+            <label class="coche"><input type="checkbox" name="prix_variable" value="1" @checked(old('prix_variable', $service->prix_variable))> Prix variable « à partir de »</label>
+            <div class="muted small" style="margin:4px 0 0 26px">La caisse demandera le prix réel à chaque vente ; le prix ci-dessus sert de minimum (ex. tresse à partir de 10 000).</div>
+        </div>
+
+        <div class="champ">
             <label class="coche"><input type="checkbox" name="actif" value="1" @checked(old('actif', $service->actif))> Visible en caisse</label>
         </div>
 

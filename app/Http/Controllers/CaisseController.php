@@ -26,6 +26,7 @@ class CaisseController extends Controller
             'code' => $s->code,
             'nom' => $s->nom,
             'prix' => $s->prix,
+            'variable' => $s->prix_variable,
             'categorie_id' => $c->id,
             'categorie' => $c->nom,
             'couleur' => $c->couleur,
@@ -57,6 +58,7 @@ class CaisseController extends Controller
             'lignes' => ['required', 'array', 'min:1', 'max:50'],
             'lignes.*.service_id' => ['required', 'integer'],
             'lignes.*.quantite' => ['required', 'integer', 'min:1', 'max:99'],
+            'lignes.*.prix' => ['nullable', 'integer', 'min:0', 'max:10000000'],
             'mode_paiement' => ['required', Rule::in(array_keys(config('salon.modes_paiement')))],
             'montant_recu' => ['nullable', 'integer', 'min:0', 'max:100000000'],
         ], [

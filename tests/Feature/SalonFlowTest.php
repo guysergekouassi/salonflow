@@ -9,6 +9,7 @@ use App\Models\Vente;
 use App\Services\KpiService;
 use App\Services\PinService;
 use App\Support\Periode;
+use Database\Seeders\CatalogueSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -30,6 +31,10 @@ class SalonFlowTest extends TestCase
         parent::setUp();
 
         Carbon::setTestNow('2026-10-01 10:00:00'); // jeudi
+
+        // Les migrations installent le catalogue du salon : on part d'un catalogue de test réduit
+        Service::query()->delete();
+        Categorie::query()->delete();
 
         $this->awa = Vendeuse::create(['nom' => 'Awa', 'ordre' => 1]);
         $this->fatou = Vendeuse::create(['nom' => 'Fatou', 'ordre' => 2]);
@@ -129,6 +134,58 @@ class SalonFlowTest extends TestCase
         $this->assertSame(2, $vente->lignes->first()->quantite);
         $this->assertSame(6000, $vente->montant_recu); // montant exact par défaut
         $this->assertSame(0, $vente->monnaie_rendue);
+    }
+
+    public function test_le_catalogue_du_salon_est_installe(): void
+    {
+        (new CatalogueSeeder)->remplacer();
+
+        $this->assertSame(22, Service::count());
+        $this->assertSame(['Onglerie', 'Décorations', 'Pédicure, manucure & visage', 'Coiffure, tresses & soins', 'Cils'],
+            Categorie::orderBy('ordre')->pluck('nom')->all());
+        $this->assertSame(30000, Service::where('nom', 'Pose gel capsules long')->value('prix'));
+        $this->assertSame(10000, Service::where('nom', 'Pose extension de cils')->value('prix'));
+        $this->assertSame(['Teinture cheveux', 'Tresse'], Service::where('prix_variable', true)->orderBy('nom')->pluck('nom')->all());
+
+        $this->get('/')->assertSee('Pose capsules Acrygel long')->assertSee('Remplissage extension de cils');
+    }
+
+    public function test_remplacer_le_catalogue_garde_les_anciens_tickets(): void
+    {
+        $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
+        (new CatalogueSeeder)->remplacer();
+
+        $ligne = Vente::first()->lignes()->first();
+        $this->assertSame('Brushing', $ligne->libelle);
+        $this->assertSame(3000, $ligne->total);
+        $this->assertNull($ligne->service_id);
+        $this->get('/dashboard')->assertOk()->assertSee('Brushing');
+    }
+
+    public function test_service_a_prix_variable_prend_le_prix_saisi_avec_un_minimum(): void
+    {
+        $tresse = Service::create([
+            'categorie_id' => Categorie::first()->id, 'code' => 'COI-T', 'nom' => 'Tresse', 'prix' => 10000, 'prix_variable' => true,
+        ]);
+
+        // Prix saisi inférieur au minimum : refusé
+        $this->vendre($this->awa, [['service_id' => $tresse->id, 'quantite' => 1, 'prix' => 8000]])
+            ->assertUnprocessable()->assertJsonValidationErrors('lignes');
+
+        // Deux tresses à des prix différents + un brushing dont le prix envoyé est ignoré
+        $this->vendre($this->awa, [
+            ['service_id' => $tresse->id, 'quantite' => 1, 'prix' => 15000],
+            ['service_id' => $tresse->id, 'quantite' => 1, 'prix' => 25000],
+            ['service_id' => $this->brushing->id, 'quantite' => 1, 'prix' => 1],
+        ])->assertCreated()->assertJsonPath('total', 43000);
+
+        $lignes = Vente::first()->lignes()->orderBy('id')->get();
+        $this->assertSame([15000, 25000, 3000], $lignes->pluck('prix_unitaire')->all());
+
+        // Sans prix saisi : prix minimum
+        $this->vendre($this->awa, [['service_id' => $tresse->id, 'quantite' => 1]])->assertJsonPath('total', 10000);
+
+        $this->get('/')->assertSee('"variable":true', false);
     }
 
     public function test_seules_les_especes_sont_acceptees(): void
@@ -334,14 +391,17 @@ class SalonFlowTest extends TestCase
         $this->ouvrirModeGerante();
         $categorie = Categorie::first();
 
-        $this->post('/services', ['categorie_id' => $categorie->id, 'code' => 'coi-009', 'nom' => 'Chignon', 'prix' => 6000, 'actif' => '1'])
+        $this->post('/services', ['categorie_id' => $categorie->id, 'code' => 'coi-009', 'nom' => 'Chignon', 'prix' => 6000, 'actif' => '1', 'prix_variable' => '1'])
             ->assertRedirect('/services');
         $chignon = Service::where('code', 'COI-009')->firstOrFail();
+        $this->assertTrue($chignon->prix_variable);
+        $this->get('/services')->assertSee('à partir de');
 
         $this->put('/services/'.$chignon->id, ['categorie_id' => $categorie->id, 'code' => 'COI-009', 'nom' => 'Chignon', 'prix' => 6500])
             ->assertRedirect('/services');
         $this->assertSame(6500, $chignon->fresh()->prix);
         $this->assertFalse($chignon->fresh()->actif);
+        $this->assertFalse($chignon->fresh()->prix_variable);
         $this->get('/')->assertDontSee('COI-009');
 
         $this->delete('/categories/'.$categorie->id)->assertSessionHas('erreur');

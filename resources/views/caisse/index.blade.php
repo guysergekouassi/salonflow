@@ -108,6 +108,20 @@
     </aside>
 </div>
 
+<dialog id="dialogue-prix" class="dialogue-prix">
+    <form id="dp-form" method="dialog" novalidate>
+        <h3 id="dp-nom"></h3>
+        <p class="muted small">Prix « à partir de » <b id="dp-minimum"></b> : saisissez le prix réel.</p>
+        <input type="number" id="dp-prix" inputmode="numeric" step="500" required>
+        <div class="dp-rapides" id="dp-rapides"></div>
+        <div class="erreur" id="dp-erreur"></div>
+        <div class="dp-actions">
+            <button type="button" class="btn" id="dp-annuler">Annuler</button>
+            <button type="submit" class="btn btn-vert">Ajouter au ticket</button>
+        </div>
+    </form>
+</dialog>
+
 <iframe id="impression" title="Impression du ticket" style="position:absolute;width:0;height:0;border:0;visibility:hidden"></iframe>
 @endsection
 

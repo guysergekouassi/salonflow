@@ -73,7 +73,9 @@ Le bouton **Mode gérante · Fermer** en haut à droite le referme tout de suite
 - En haut : chiffre d'affaires, nombre de tickets et panier moyen **du jour**, mis à jour à chaque vente.
 - Toucher le **nom de la vendeuse** au-dessus du ticket. Il reste sélectionné pour les ventes suivantes ;
   l'encaissement est bloqué tant qu'aucun nom n'est choisi.
-- Cliquer sur une carte = +1 dans le ticket. Le badge vert sur la carte indique la quantité.
+- Cliquer sur une carte = +1 dans le ticket.
+- Services à **prix variable** (« à partir de », ex. tresse, teinture) : la caisse demande le prix réel, qui ne peut pas
+  être inférieur au prix minimum. Option *Prix variable* dans la fiche du service. Le badge vert sur la carte indique la quantité.
 - Dans le ticket : `+` / `−` pour la quantité, `✕` pour retirer une ligne, *Vider* pour tout effacer.
 - Recherche : taper le nom ou le code puis **Entrée** ajoute le premier résultat (touche `/` pour aller dans la recherche).
 - Paiement **en espèces uniquement**. Saisir le montant reçu (ou un bouton billet) :

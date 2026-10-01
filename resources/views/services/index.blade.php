@@ -33,7 +33,7 @@
                     <td class="mono small nowrap">{{ $service->code }}</td>
                     <td><b>{{ $service->nom }}</b></td>
                     <td><span class="badge" style="background: {{ $service->categorie->couleur }}1f; color: {{ $service->categorie->couleur }}">{{ $service->categorie->nom }}</span></td>
-                    <td class="right nowrap" style="color:var(--vert);font-weight:800" data-tri="{{ $service->prix }}" data-export="{{ $service->prix }}">{{ Fcfa::format($service->prix) }}</td>
+                    <td class="right nowrap" style="color:var(--vert);font-weight:800" data-tri="{{ $service->prix }}" data-export="{{ $service->prix }}">@if($service->prix_variable)<span class="muted small" style="font-weight:600">à partir de</span> @endif{{ Fcfa::format($service->prix) }}</td>
                     <td>@if($service->actif)<span class="badge badge-vert">Visible</span>@else<span class="badge badge-gris">Masqué</span>@endif</td>
                     <td>
                         <div class="actions">
