@@ -5,6 +5,9 @@ cd /d "%~dp0"
 REM Port de la caisse : a changer ici si 8008 est deja pris par une autre application
 set PORT=8008
 
+REM Met la base de donnees a jour apres une mise a jour du logiciel (sans effet si deja a jour)
+php artisan migrate --force >nul 2>&1
+
 REM Demarre le serveur local dans une fenetre reduite, sauf s'il tourne deja
 netstat -ano | findstr /r /c:"127.0.0.1:%PORT% .*LISTENING" >nul
 if errorlevel 1 (
