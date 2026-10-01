@@ -23,7 +23,7 @@ class TicketService
             throw new RuntimeException('Le package mike42/escpos-php n\'est pas installé.');
         }
 
-        $vente->loadMissing(['lignes', 'user']);
+        $vente->loadMissing(['lignes', 'vendeuse']);
         $config = config('salon.ticket');
         $colonnes = $config['largeur_mm'] === 58 ? 32 : 42;
 
@@ -75,7 +75,9 @@ class TicketService
             $imprimante->text(str_repeat('-', $colonnes)."\n");
 
             $imprimante->setJustification(Printer::JUSTIFY_CENTER);
-            $imprimante->text('Servi par : '.$t($vente->user?->name)."\n");
+            if ($vente->vendeuse) {
+                $imprimante->text('Servi par : '.$t($vente->vendeuse->nom)."\n");
+            }
             $imprimante->text($t(config('salon.message_ticket'))."\n");
             $imprimante->feed(3);
             $imprimante->cut();

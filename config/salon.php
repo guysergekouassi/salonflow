@@ -7,8 +7,8 @@ return [
     'telephone' => env('SALON_TELEPHONE', ''),
     'message_ticket' => env('SALON_MESSAGE_TICKET', 'Merci de votre visite, à bientôt !'),
 
-    // La gérante peut créer au maximum X comptes assistantes actifs
-    'max_assistantes' => (int) env('SALON_MAX_ASSISTANTES', 3),
+    // Après le code PIN, le mode gérante (prix, annulations, vendeuses) reste ouvert X minutes
+    'mode_gerante_minutes' => (int) env('SALON_MODE_GERANTE_MINUTES', 10),
 
     'modes_paiement' => [
         'especes' => 'Espèces',

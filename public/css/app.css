@@ -81,6 +81,11 @@ svg.ico { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: non
 .entete .fil { color: var(--gris); font-size: 13px; }
 .entete .espace { flex: 1; }
 .horloge { background: var(--fond); border: 1px solid var(--bord); border-radius: 8px; padding: 6px 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.btn-gerante { padding: 8px 14px; border-radius: 999px; font-size: 14px; }
+.btn-gerante svg { width: 18px; height: 18px; }
+.btn-gerante.ouvert { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+.sidebar nav a .verrou { margin-left: auto; opacity: .5; display: inline-flex; }
+.sidebar nav a .verrou svg { width: 15px; height: 15px; }
 .utilisateur { position: relative; }
 .utilisateur > button {
     display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--bord); border-radius: 999px;
@@ -273,6 +278,24 @@ table.tableau { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 body.page-caisse .contenu { padding: 0; display: flex; min-height: 0; }
 .caisse { display: flex; flex: 1; min-height: calc(100vh - 64px); }
 .catalogue { flex: 1; min-width: 0; padding: 20px 24px; }
+.kpis-jour { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+.kpi-jour {
+    background: #fff; border: 1px solid var(--bord); border-radius: 12px; padding: 12px 16px; color: var(--texte);
+    display: flex; flex-direction: column; gap: 2px; box-shadow: var(--ombre);
+}
+.kpi-jour span { font-size: 12px; font-weight: 600; color: var(--gris); }
+.kpi-jour b { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.kpi-jour.principal-kpi { background: var(--nuit); border-color: var(--nuit); color: #fff; }
+.kpi-jour.principal-kpi span { color: #cbd5e1; }
+.kpi-jour:hover { box-shadow: var(--ombre-forte); }
+.vendeuses { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 12px 20px; border-bottom: 1px dashed #cbd5e1; }
+.vendeuses button {
+    border: 2px solid var(--bord); background: #fff; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px;
+    font-weight: 700; cursor: pointer; color: var(--texte);
+}
+.vendeuses button.actif { background: #fcc1c5; border-color: #e11d48; color: #881337; }
+.vendeuses.a-choisir button { border-color: #fca5a5; animation: clignote 1s 2; }
+@keyframes clignote { 50% { background: #fee2e2; } }
 .catalogue .recherche { display: flex; gap: 12px; margin-bottom: 14px; }
 .catalogue .recherche .champ-recherche { flex: 1; position: relative; }
 .catalogue .recherche .champ-recherche svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gris-clair); }
@@ -356,22 +379,22 @@ body.page-caisse .contenu { padding: 0; display: flex; min-height: 0; }
 .ticket-message { margin-top: 10px; font-size: 14px; font-weight: 600; }
 .ticket-message.erreur-msg { color: var(--rouge); }
 
-/* ---------- Connexion ---------- */
-.connexion { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(380px, 1fr); background: #fff; }
-.connexion .visuel-salon {
-    position: relative; background: #fcc1c5 url("../images/salon.jpg") center / cover no-repeat; min-height: 100vh;
-}
-.connexion .visuel-salon::after {
-    content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,42,74,0) 55%, rgba(11,42,74,.75) 100%);
-}
-.connexion .visuel-salon .legende { position: absolute; left: 40px; right: 40px; bottom: 40px; z-index: 1; color: #fff; }
-.connexion .visuel-salon .legende h2 { font-size: 32px; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,.25); }
-.connexion .visuel-salon .legende p { margin: 6px 0 0; font-size: 16px; opacity: .95; }
-.connexion .cote-formulaire { display: grid; place-items: center; padding: 32px; background: var(--fond); }
-.connexion .boite { width: 100%; max-width: 400px; background: #fff; border-radius: 16px; padding: 32px; box-shadow: var(--ombre-forte); }
-.connexion .marque { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
 .logo-image { display: block; object-fit: cover; border-radius: 50%; flex: none; }
-.connexion .logo-image { width: 56px; height: 56px; border: 3px solid #fcc1c5; }
+
+/* ---------- Code PIN gérante ---------- */
+.pin-page { display: grid; place-items: center; padding: 24px 0; }
+.pin-boite { width: 100%; max-width: 340px; padding: 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.pin-boite .logo-image { width: 64px; height: 64px; border: 3px solid #fcc1c5; }
+.pin-boite h2 { font-size: 20px; }
+.pin-boite p { margin: 0 0 6px; }
+.pin-saisie { text-align: center; font-size: 28px !important; letter-spacing: .4em; font-weight: 800; max-width: 220px; }
+.pave { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; margin: 8px 0; }
+.pave button {
+    height: 60px; border-radius: 14px; border: 1px solid var(--bord); background: #fff; font: inherit; font-size: 22px; font-weight: 700;
+    cursor: pointer; color: var(--texte); box-shadow: var(--ombre);
+}
+.pave button:active { transform: scale(.96); background: var(--fond); }
+.pave .valider { background: var(--vert); border-color: var(--vert); color: #fff; font-size: 18px; }
 
 /* ---------- Écrans plus petits ---------- */
 @media (max-width: 1280px) {
@@ -390,15 +413,10 @@ body.page-caisse .contenu { padding: 0; display: flex; min-height: 0; }
     body.menu-replie .principal { margin-left: 0; }
     .entete .burger { display: block; }
 }
-@media (max-width: 900px) {
-    .connexion { grid-template-columns: 1fr; }
-    .connexion .visuel-salon { min-height: 220px; background-position: center 40%; }
-    .connexion .visuel-salon .legende { left: 24px; bottom: 20px; }
-    .connexion .visuel-salon .legende h2 { font-size: 24px; }
-}
 @media (max-width: 800px) {
     .caisse { flex-direction: column; }
     .ticket-panneau { width: 100%; position: static; height: auto; border-left: 0; border-top: 1px solid var(--bord); }
     .kpis, .grille-2 { grid-template-columns: 1fr; }
+    .kpis-jour { grid-template-columns: 1fr 1fr; }
     .entete .fil, .horloge { display: none; }
 }

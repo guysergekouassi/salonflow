@@ -4,10 +4,13 @@ Caisse tactile pour un PC Windows d'accueil, **sans internet** : on clique sur l
 le total se calcule tout seul, on encaisse et le ticket sort sur l'imprimante thermique.
 La gérante suit ses ventes (jour, semaine, mois) avec des KPI clairs.
 
-| Qui | Accès |
+**Pas de connexion** : en ouvrant l'application, on arrive directement sur la caisse, avec les KPI du jour en haut
+et les cartes des services.
+
+| Accès | Quoi |
 |---|---|
-| **Gérante** | Tout : caisse, tableau de bord, historique et annulation de tickets, services & prix, comptes |
-| **Assistante** (3 comptes actifs maximum) | La caisse et **ses propres** KPI, rien d'autre |
+| **Libre** (tout le monde) | Caisse, KPI & états de vente, historique des ventes, liste des services et des prix, réimpression des tickets |
+| **Code PIN de la gérante** | Modifier / ajouter / supprimer des services et catégories, annuler un ticket, gérer les vendeuses, changer le code PIN |
 
 ## 1. Installation sur le PC du salon (une seule fois, avec internet)
 
@@ -28,7 +31,7 @@ composer setup
 ```
 
 `composer setup` installe les dépendances, crée le `.env`, la base SQLite (`database/database.sqlite`),
-les tables, la liste de services d'exemple et le compte gérante.
+les tables, la liste de services d'exemple et le code PIN de départ (1234).
 
 3. Ouvrir `.env` et mettre les informations du salon (elles s'impriment en haut du ticket) :
 
@@ -40,7 +43,7 @@ SALON_MESSAGE_TICKET="Merci de votre visite, à bientôt !"
 TICKET_LARGEUR_MM=80        # 58 si le papier est étroit
 ```
 
-L'image du salon (page de connexion et menu) se trouve dans `public/images/salon.jpg`, et le logo rond dans
+L'image du salon (menu) se trouve dans `public/images/salon.jpg`, et le logo rond dans
 `public/images/logo.jpg` (carré, environ 160 × 160 px). Pour les changer, il suffit de remplacer ces deux fichiers
 en gardant les mêmes noms.
 
@@ -55,12 +58,21 @@ Après ça, **plus besoin d'internet** : tout tourne sur le PC (base SQLite, auc
   Si la caisse est déjà ouverte, l'icône rouvre simplement la fenêtre.
 - Autre possibilité : dans Chrome, sur http://127.0.0.1:8008, menu ⋮ → *Caster, enregistrer et partager* →
   *Installer la page en tant qu'application* (le serveur doit alors être démarré avec `demarrer-salon.bat`).
-- Première connexion : `gerante@salon.local` / `ChangeMoi!2026`.
-  **Changer le mot de passe tout de suite** (menu en haut à droite → *Mon mot de passe*).
-- La gérante crée les comptes des assistantes dans **Comptes assistantes**.
+- **Code PIN de départ : `1234`**. Le changer tout de suite : bouton **Mode gérante** en haut à droite → code `1234`
+  → menu **Vendeuses & code PIN** → *Changer le code PIN*.
+- Dans ce même menu, la gérante ajoute les **vendeuses** (Awa, Fatou…). Leurs noms apparaissent sur la caisse.
+
+### Mode gérante
+
+Les actions sensibles demandent le code PIN (pavé numérique à l'écran). Une fois le code saisi, le **mode gérante**
+reste ouvert 10 minutes (réglable avec `SALON_MODE_GERANTE_MINUTES` dans `.env`), puis se referme tout seul.
+Le bouton **Mode gérante · Fermer** en haut à droite le referme tout de suite. Après 5 codes faux, il faut attendre une minute.
 
 ### La caisse
 
+- En haut : chiffre d'affaires, nombre de tickets et panier moyen **du jour**, mis à jour à chaque vente.
+- Toucher le **nom de la vendeuse** au-dessus du ticket. Il reste sélectionné pour les ventes suivantes ;
+  l'encaissement est bloqué tant qu'aucun nom n'est choisi.
 - Cliquer sur une carte = +1 dans le ticket. Le badge vert sur la carte indique la quantité.
 - Dans le ticket : `+` / `−` pour la quantité, `✕` pour retirer une ligne, *Vider* pour tout effacer.
 - Recherche : taper le nom ou le code puis **Entrée** ajoute le premier résultat (touche `/` pour aller dans la recherche).
@@ -107,7 +119,7 @@ Période : **Aujourd'hui / Semaine / Mois** ou dates libres.
 | CA par heure (jour) ou par jour (semaine, mois) | graphique en barres |
 | Par catégorie et par mode de paiement | part de chaque catégorie / moyen de paiement |
 | Top 10 des services | quantité et CA |
-| Ventes par personne | tickets, CA et panier moyen de chaque assistante (et de la gérante) |
+| Ventes par vendeuse | tickets, CA et panier moyen de chaque vendeuse |
 | Heures d'affluence, jours les plus rentables | pour organiser le planning |
 
 Pour une période en cours, l'évolution compare la **même durée écoulée** : jeudi 18 h cette semaine contre
@@ -129,10 +141,10 @@ Double-cliquer sur **`sauvegarder.bat`** chaque soir : il copie ce fichier dans 
 Copier régulièrement ce dossier sur une clé USB. Pour restaurer une sauvegarde, remettre le fichier à la place de
 `database/database.sqlite`.
 
-Mot de passe gérante oublié :
+Code PIN oublié (dans un terminal, dans le dossier du projet) :
 
 ```bash
-php artisan salon:mot-de-passe gerante@salon.local NouveauMotDePasse
+php artisan salon:pin 1234
 ```
 
 ## 6. Tests
@@ -141,24 +153,24 @@ php artisan salon:mot-de-passe gerante@salon.local NouveauMotDePasse
 php artisan test
 ```
 
-Les tests vérifient : prix recalculés côté serveur, numérotation des tickets (`T-AAAAMMJJ-0001`, remise à zéro chaque jour),
-espèces insuffisantes refusées, limite de 3 assistantes actives, accès refusé aux assistantes en dehors de la caisse
-et de leurs KPI, tickets des autres invisibles, KPI jour / semaine / dates et évolution, tickets annulés exclus,
-gestion des services.
+Les tests vérifient : caisse accessible sans connexion, prix recalculés côté serveur, vendeuse obligatoire,
+numérotation des tickets (`T-AAAAMMJJ-0001`, remise à zéro chaque jour), espèces insuffisantes refusées,
+actions sensibles bloquées sans code PIN, mauvais code refusé, expiration du mode gérante, limite d'essais,
+gestion des vendeuses et du code, KPI jour / semaine / dates et évolution, tickets annulés exclus, gestion des services.
 
 ## Arborescence
 
 ```
 app/
-  Http/Controllers/  Caisse, Ticket, Dashboard, MesKpi, Service, Categorie, Compte, MotDePasse, Auth/Login
-  Http/Middleware/   VerifierRole (gerante / assistante)
-  Models/            User, Categorie, Service, Vente, VenteLigne
-  Services/          VenteService, KpiService, CompteService, TicketService (ESC/POS)
+  Http/Controllers/  Caisse, Ticket, Dashboard, Service, Categorie, Vendeuse, Gerante (code PIN)
+  Http/Middleware/   ModeGerante (actions protégées par le code PIN)
+  Models/            Vendeuse, Categorie, Service, Vente, VenteLigne, Parametre
+  Services/          VenteService, KpiService, PinService, TicketService (ESC/POS)
   Support/           Fcfa, Periode
-config/salon.php     nom du salon, ticket, modes de paiement, maximum d'assistantes
+config/salon.php     nom du salon, ticket, modes de paiement, durée du mode gérante
 public/css/app.css   styles (aucun CDN)
 public/js/caisse.js  écran de caisse
-resources/views/     caisse, tickets, dashboard, mes-kpi, ventes, services, comptes, auth
+resources/views/     caisse, tickets, dashboard, ventes, services, parametres, gerante
 demarrer-salon.bat   lance le serveur et la caisse
 creer-raccourci.bat  crée l'icône SalonFlow sur le bureau et dans le menu Démarrer
 sauvegarder.bat      sauvegarde de la base

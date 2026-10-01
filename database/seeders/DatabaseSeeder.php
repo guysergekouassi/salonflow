@@ -4,19 +4,22 @@ namespace Database\Seeders;
 
 use App\Models\Categorie;
 use App\Models\Service;
-use App\Models\User;
+use App\Models\Vendeuse;
+use App\Services\PinService;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::firstOrCreate(['email' => 'gerante@salon.local'], [
-            'name' => 'Gérante',
-            'password' => 'ChangeMoi!2026',
-            'role' => User::ROLE_GERANTE,
-            'actif' => true,
-        ]);
+        $pin = app(PinService::class);
+        if (! $pin->estDefini()) {
+            $pin->definir('1234');
+        }
+
+        if (! Vendeuse::exists()) {
+            Vendeuse::create(['nom' => 'Gérante', 'ordre' => 1]);
+        }
 
         // Liste d'exemple : la gérante modifie noms et prix dans le menu « Services »
         $catalogue = [
@@ -68,6 +71,8 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $this->command?->warn('Compte gérante : gerante@salon.local / ChangeMoi!2026 — changez le mot de passe dès la première connexion.');
+        if ($pin->verifier('1234')) {
+            $this->command?->warn('Code PIN gérante : 1234 — changez-le dans Paramètres dès la première utilisation.');
+        }
     }
 }

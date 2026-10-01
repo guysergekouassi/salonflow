@@ -10,8 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Vente extends Model
 {
     protected $fillable = [
-        'numero', 'user_id', 'total', 'mode_paiement', 'montant_recu', 'monnaie_rendue',
-        'annulee_at', 'annulee_par', 'motif_annulation',
+        'numero', 'vendeuse_id', 'total', 'mode_paiement', 'montant_recu', 'monnaie_rendue',
+        'annulee_at', 'motif_annulation',
     ];
 
     protected function casts(): array
@@ -24,19 +24,14 @@ class Vente extends Model
         ];
     }
 
-    public function user(): BelongsTo
+    public function vendeuse(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Vendeuse::class);
     }
 
     public function lignes(): HasMany
     {
         return $this->hasMany(VenteLigne::class);
-    }
-
-    public function annuleePar(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'annulee_par');
     }
 
     /** Ventes qui comptent dans le chiffre d'affaires */

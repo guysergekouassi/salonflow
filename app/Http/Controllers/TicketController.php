@@ -13,8 +13,7 @@ class TicketController extends Controller
 {
     public function show(Request $request, Vente $vente, TicketService $tickets): View
     {
-        $this->autoriser($request, $vente);
-        $vente->load(['lignes', 'user']);
+        $vente->load(['lignes', 'vendeuse']);
 
         // Mode escpos : le ticket part directement sur l'imprimante, la page sert d'aperçu
         if ($request->boolean('imprimer') && config('salon.ticket.driver') === 'escpos') {
@@ -30,10 +29,8 @@ class TicketController extends Controller
         return view('tickets.show', ['vente' => $vente]);
     }
 
-    public function imprimer(Request $request, Vente $vente, TicketService $tickets): RedirectResponse
+    public function imprimer(Vente $vente, TicketService $tickets): RedirectResponse
     {
-        $this->autoriser($request, $vente);
-
         try {
             $tickets->imprimer($vente);
 
@@ -43,13 +40,5 @@ class TicketController extends Controller
 
             return back()->with('erreur', 'Impression directe impossible : '.$e->getMessage());
         }
-    }
-
-    /** Une assistante ne peut rouvrir que ses propres tickets */
-    private function autoriser(Request $request, Vente $vente): void
-    {
-        $user = $request->user();
-
-        abort_unless($user->isGerante() || $vente->user_id === $user->id, 403, 'Ce ticket ne vous appartient pas.');
     }
 }

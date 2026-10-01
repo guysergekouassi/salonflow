@@ -8,7 +8,7 @@
         <h2>@include('partials.icone', ['nom' => 'liste']) Historique des ventes</h2>
         <p>{{ $periode->libelle() }} · {{ $ventes->count() }} ticket(s)</p>
     </div>
-    @include('partials.selecteur-periode', ['periode' => $periode, 'route' => 'ventes.index', 'extra' => array_filter(request()->only('user_id', 'statut'))])
+    @include('partials.selecteur-periode', ['periode' => $periode, 'route' => 'ventes.index', 'extra' => array_filter(request()->only('vendeuse_id', 'statut'))])
 </div>
 
 @error('motif')<div class="alerte alerte-erreur">{{ $message }}</div>@enderror
@@ -18,9 +18,9 @@
 
 <form method="GET" class="filtres-dates" style="margin-bottom:16px">
     @foreach(request()->only('periode', 'du', 'au') as $cle => $valeur)<input type="hidden" name="{{ $cle }}" value="{{ $valeur }}">@endforeach
-    <select name="user_id" style="width:auto">
-        <option value="">Toutes les personnes</option>
-        @foreach($personnes as $p)<option value="{{ $p->id }}" @selected(request('user_id') == $p->id)>{{ $p->name }}</option>@endforeach
+    <select name="vendeuse_id" style="width:auto">
+        <option value="">Toutes les vendeuses</option>
+        @foreach($vendeuses as $v)<option value="{{ $v->id }}" @selected(request('vendeuse_id') == $v->id)>{{ $v->nom }}</option>@endforeach
     </select>
     <select name="statut" style="width:auto">
         <option value="">Tous les tickets</option>

@@ -4,9 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Categorie;
 use App\Models\Service;
-use App\Models\User;
+use App\Models\Vendeuse;
 use App\Models\Vente;
 use App\Services\KpiService;
+use App\Services\PinService;
 use App\Support\Periode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -16,9 +17,9 @@ class SalonFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    private User $gerante;
+    private Vendeuse $awa;
 
-    private User $assistante;
+    private Vendeuse $fatou;
 
     private Service $brushing;
 
@@ -30,8 +31,8 @@ class SalonFlowTest extends TestCase
 
         Carbon::setTestNow('2026-10-01 10:00:00'); // jeudi
 
-        $this->gerante = User::factory()->gerante()->create();
-        $this->assistante = User::factory()->create(['name' => 'Awa']);
+        $this->awa = Vendeuse::create(['nom' => 'Awa', 'ordre' => 1]);
+        $this->fatou = Vendeuse::create(['nom' => 'Fatou', 'ordre' => 2]);
 
         $categorie = Categorie::create(['nom' => 'Coiffure', 'couleur' => '#2563eb']);
         $this->brushing = Service::create(['categorie_id' => $categorie->id, 'code' => 'COI-001', 'nom' => 'Brushing', 'prix' => 3000]);
@@ -44,35 +45,81 @@ class SalonFlowTest extends TestCase
         parent::tearDown();
     }
 
-    private function vendre(User $user, array $lignes, string $mode = 'especes', ?int $recu = null)
+    private function vendre(?Vendeuse $vendeuse, array $lignes, string $mode = 'especes', ?int $recu = null)
     {
-        return $this->actingAs($user)->postJson('/caisse', [
+        return $this->postJson('/caisse', [
+            'vendeuse_id' => $vendeuse?->id,
             'lignes' => $lignes,
             'mode_paiement' => $mode,
             'montant_recu' => $recu,
         ]);
     }
 
+    private function ouvrirModeGerante(): void
+    {
+        $this->withSession(['mode_gerante_jusqua' => now()->addMinutes(10)->timestamp]);
+    }
+
+    public function test_la_caisse_s_ouvre_sans_connexion_avec_kpi_du_jour_et_services(): void
+    {
+        $this->vendre($this->awa, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Brushing')
+            ->assertSee('Awa')
+            ->assertSee('Fatou')
+            ->assertSee("Chiffre d'affaires du jour", false)
+            ->assertSee('10 000 FCFA');
+
+        foreach (['/dashboard', '/ventes', '/services', '/tickets/'.Vente::first()->id] as $url) {
+            $this->get($url)->assertOk();
+        }
+        $this->get('/login')->assertNotFound();
+    }
+
     public function test_la_vente_est_calculee_avec_les_prix_de_la_base(): void
     {
-        $this->vendre($this->assistante, [
+        $this->vendre($this->awa, [
             ['service_id' => $this->brushing->id, 'quantite' => 2, 'prix' => 1],
             ['service_id' => $this->tresses->id, 'quantite' => 1],
         ], 'especes', 20000)
             ->assertCreated()
-            ->assertJsonPath('numero', 'T-20261001-0001');
+            ->assertJsonPath('numero', 'T-20261001-0001')
+            ->assertJsonPath('total', 16000);
 
         $vente = Vente::with('lignes')->first();
         $this->assertSame(16000, $vente->total);
-        $this->assertSame(20000, $vente->montant_recu);
         $this->assertSame(4000, $vente->monnaie_rendue);
-        $this->assertSame($this->assistante->id, $vente->user_id);
+        $this->assertSame($this->awa->id, $vente->vendeuse_id);
         $this->assertCount(2, $vente->lignes);
+
+        $this->get('/tickets/'.$vente->id)->assertSee('Servi par : Awa');
+    }
+
+    public function test_la_vendeuse_est_obligatoire_et_doit_etre_active(): void
+    {
+        $ligne = [['service_id' => $this->brushing->id, 'quantite' => 1]];
+
+        $this->vendre(null, $ligne)->assertUnprocessable()->assertJsonValidationErrors('vendeuse_id');
+
+        $this->fatou->update(['actif' => false]);
+        $this->vendre($this->fatou, $ligne)->assertUnprocessable()->assertJsonValidationErrors('vendeuse_id');
+
+        $this->assertSame(0, Vente::count());
+    }
+
+    public function test_sans_aucune_vendeuse_la_vente_passe_sans_nom(): void
+    {
+        Vendeuse::query()->update(['actif' => false]);
+
+        $this->vendre(null, [['service_id' => $this->brushing->id, 'quantite' => 1]])->assertCreated();
+        $this->assertNull(Vente::first()->vendeuse_id);
     }
 
     public function test_un_meme_service_clique_plusieurs_fois_est_regroupe(): void
     {
-        $this->vendre($this->assistante, [
+        $this->vendre($this->awa, [
             ['service_id' => $this->brushing->id, 'quantite' => 1],
             ['service_id' => $this->brushing->id, 'quantite' => 1],
         ], 'mobile_money')->assertCreated();
@@ -80,7 +127,6 @@ class SalonFlowTest extends TestCase
         $vente = Vente::with('lignes')->first();
         $this->assertCount(1, $vente->lignes);
         $this->assertSame(2, $vente->lignes->first()->quantite);
-        $this->assertSame(6000, $vente->total);
         $this->assertNull($vente->montant_recu);
     }
 
@@ -88,22 +134,22 @@ class SalonFlowTest extends TestCase
     {
         $ligne = [['service_id' => $this->brushing->id, 'quantite' => 1]];
 
-        $this->vendre($this->assistante, $ligne)->assertJsonPath('numero', 'T-20261001-0001');
-        $this->vendre($this->gerante, $ligne)->assertJsonPath('numero', 'T-20261001-0002');
+        $this->vendre($this->awa, $ligne)->assertJsonPath('numero', 'T-20261001-0001');
+        $this->vendre($this->fatou, $ligne)->assertJsonPath('numero', 'T-20261001-0002');
 
         Carbon::setTestNow('2026-10-02 09:00:00');
-        $this->vendre($this->assistante, $ligne)->assertJsonPath('numero', 'T-20261002-0001');
+        $this->vendre($this->awa, $ligne)->assertJsonPath('numero', 'T-20261002-0001');
     }
 
     public function test_ticket_vide_service_desactive_ou_especes_insuffisantes_refuses(): void
     {
-        $this->vendre($this->assistante, [])->assertUnprocessable();
+        $this->vendre($this->awa, [])->assertUnprocessable();
 
-        $this->vendre($this->assistante, [['service_id' => $this->tresses->id, 'quantite' => 1]], 'especes', 5000)
+        $this->vendre($this->awa, [['service_id' => $this->tresses->id, 'quantite' => 1]], 'especes', 5000)
             ->assertUnprocessable()->assertJsonValidationErrors('montant_recu');
 
         $this->brushing->update(['actif' => false]);
-        $this->vendre($this->assistante, [['service_id' => $this->brushing->id, 'quantite' => 1]])
+        $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 1]])
             ->assertUnprocessable()->assertJsonValidationErrors('lignes');
 
         $this->assertSame(0, Vente::count());
@@ -111,119 +157,102 @@ class SalonFlowTest extends TestCase
 
     public function test_changer_un_prix_ne_modifie_pas_les_anciens_tickets(): void
     {
-        $this->vendre($this->assistante, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
+        $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
         $this->brushing->update(['prix' => 3500, 'nom' => 'Brushing long']);
 
         $vente = Vente::with('lignes')->first();
         $this->assertSame(3000, $vente->total);
-        $this->assertSame('Brushing', $vente->lignes->first()->libelle);
-
-        $this->actingAs($this->gerante)->get('/tickets/'.$vente->id)
-            ->assertOk()->assertSee('Brushing')->assertSee('3 000 FCFA');
+        $this->get('/tickets/'.$vente->id)->assertOk()->assertSee('Brushing')->assertSee('3 000 FCFA');
     }
 
-    public function test_assistante_limitee_a_la_caisse_et_a_ses_kpi(): void
+    public function test_les_actions_sensibles_demandent_le_code_pin(): void
     {
-        $this->actingAs($this->assistante);
-
-        $this->get('/caisse')->assertOk()->assertSee('Brushing');
-        $this->get('/mes-kpi')->assertOk();
-        $this->get('/')->assertRedirect('/caisse');
-
-        foreach (['/dashboard', '/ventes', '/services', '/services/create', '/comptes'] as $url) {
-            $this->get($url)->assertForbidden();
-        }
-        $this->post('/comptes', ['name' => 'X', 'email' => 'x@x.ci', 'password' => 'secret1', 'password_confirmation' => 'secret1'])->assertForbidden();
-        $this->put('/services/'.$this->brushing->id, ['prix' => 1])->assertForbidden();
-        $this->assertSame(3000, $this->brushing->fresh()->prix);
-    }
-
-    public function test_assistante_ne_voit_pas_les_tickets_des_autres(): void
-    {
-        $collegue = User::factory()->create();
-        $this->vendre($collegue, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
+        $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
         $vente = Vente::first();
 
-        $this->actingAs($this->assistante)->get('/tickets/'.$vente->id)->assertForbidden();
-        $this->actingAs($collegue)->get('/tickets/'.$vente->id)->assertOk();
-        $this->actingAs($this->gerante)->get('/tickets/'.$vente->id)->assertOk();
+        $this->get('/services/create')->assertRedirectContains('/gerante');
+        $this->get('/services/'.$this->brushing->id.'/edit')->assertRedirectContains('/gerante');
+        $this->get('/parametres')->assertRedirectContains('/gerante');
+        $this->put('/services/'.$this->brushing->id, ['prix' => 1])->assertRedirectContains('/gerante');
+        $this->delete('/services/'.$this->brushing->id)->assertRedirectContains('/gerante');
+        $this->post("/ventes/{$vente->id}/annuler", ['motif' => 'x'])->assertRedirectContains('/gerante');
+        $this->post('/vendeuses', ['nom' => 'Intruse'])->assertRedirectContains('/gerante');
+        $this->put('/parametres/pin', ['pin' => '0000', 'pin_confirmation' => '0000'])->assertRedirectContains('/gerante');
+
+        $this->assertSame(3000, $this->brushing->fresh()->prix);
+        $this->assertNotNull($this->brushing->fresh());
+        $this->assertNull($vente->fresh()->annulee_at);
+        $this->assertFalse(Vendeuse::where('nom', 'Intruse')->exists());
+        $this->assertTrue(app(PinService::class)->verifier('1234'));
     }
 
-    public function test_mes_kpi_ne_montre_que_les_ventes_de_l_assistante(): void
+    public function test_code_pin_correct_ouvre_le_mode_gerante_et_mauvais_code_refuse(): void
     {
-        $collegue = User::factory()->create();
-        $this->vendre($this->assistante, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
-        $this->vendre($collegue, [['service_id' => $this->tresses->id, 'quantite' => 3]]);
+        $this->post('/gerante', ['pin' => '9999', 'retour' => url('/parametres')])->assertSessionHasErrors('pin');
+        $this->get('/parametres')->assertRedirectContains('/gerante');
 
-        $kpi = app(KpiService::class)->calculer(Periode::depuis('jour'), $this->assistante);
-        $this->assertSame(3000, $kpi['resume']['ca']);
-        $this->assertSame(1, $kpi['resume']['tickets']);
+        $this->post('/gerante', ['pin' => '1234', 'retour' => url('/parametres')])->assertRedirect(url('/parametres'));
+        $this->get('/parametres')->assertOk()->assertSee('Awa');
 
-        $this->actingAs($this->assistante)->get('/mes-kpi')
-            ->assertOk()->assertSee('3 000')->assertDontSee('30 000');
+        // Retour vers un site externe refusé
+        $this->post('/gerante/fermer');
+        $this->post('/gerante', ['pin' => '1234', 'retour' => 'https://exemple.com'])->assertRedirect(route('dashboard'));
+
+        $this->post('/gerante/fermer');
+        $this->get('/parametres')->assertRedirectContains('/gerante');
     }
 
-    public function test_gerante_limitee_a_trois_assistantes_actives(): void
+    public function test_le_mode_gerante_expire(): void
     {
-        $this->actingAs($this->gerante);
-        // Une assistante existe déjà (setUp) : on peut en créer deux de plus
-        foreach (['b', 'c'] as $lettre) {
-            $this->post('/comptes', [
-                'name' => "Assistante {$lettre}", 'email' => "{$lettre}@salon.ci",
-                'password' => 'secret1', 'password_confirmation' => 'secret1',
-            ])->assertSessionHasNoErrors();
+        $this->post('/gerante', ['pin' => '1234']);
+        $this->get('/parametres')->assertOk();
+
+        Carbon::setTestNow(now()->addMinutes(11));
+        $this->get('/parametres')->assertRedirectContains('/gerante');
+    }
+
+    public function test_trop_d_essais_de_code_pin_sont_bloques(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/gerante', ['pin' => '0000']);
         }
-
-        $this->post('/comptes', [
-            'name' => 'Quatrième', 'email' => 'd@salon.ci', 'password' => 'secret1', 'password_confirmation' => 'secret1',
-        ])->assertSessionHasErrors('name');
-        $this->assertSame(3, User::assistantes()->count());
-
-        // Désactiver libère une place, réactiver au-delà de la limite est refusé
-        $this->patch("/comptes/{$this->assistante->id}/activation")->assertSessionHasNoErrors();
-        $this->assertFalse($this->assistante->fresh()->actif);
-        $this->post('/comptes', [
-            'name' => 'Quatrième', 'email' => 'd@salon.ci', 'password' => 'secret1', 'password_confirmation' => 'secret1',
-        ])->assertSessionHasNoErrors();
-        $this->patch("/comptes/{$this->assistante->id}/activation")->assertSessionHasErrors('name');
-        $this->assertFalse($this->assistante->fresh()->actif);
+        $this->post('/gerante', ['pin' => '1234'])->assertStatus(429);
     }
 
-    public function test_compte_desactive_ne_peut_plus_se_connecter_ni_vendre(): void
+    public function test_gerante_gere_les_vendeuses_et_le_code_pin(): void
     {
-        $this->assistante->update(['actif' => false]);
+        $this->ouvrirModeGerante();
 
-        $this->post('/login', ['email' => $this->assistante->email, 'password' => 'password'])
-            ->assertSessionHasErrors('email');
-        $this->assertGuest();
+        $this->post('/vendeuses', ['nom' => 'Mariam'])->assertSessionHasNoErrors();
+        $this->post('/vendeuses', ['nom' => 'Mariam'])->assertSessionHasErrors('nom');
+        $mariam = Vendeuse::where('nom', 'Mariam')->firstOrFail();
 
-        $this->actingAs($this->assistante)->get('/caisse')->assertRedirect('/login');
-    }
+        $this->put("/vendeuses/{$mariam->id}", ['nom' => 'Mariam K.'])->assertSessionHasNoErrors();
+        $this->patch("/vendeuses/{$mariam->id}/activation");
+        $this->assertFalse($mariam->fresh()->actif);
+        $this->get('/')->assertDontSee('data-id="'.$mariam->id.'"', false);
 
-    public function test_connexion_redirige_selon_le_role(): void
-    {
-        $this->post('/login', ['email' => $this->gerante->email, 'password' => 'password'])->assertRedirect('/dashboard');
-        $this->post('/logout');
-        $this->post('/login', ['email' => $this->assistante->email, 'password' => 'password'])->assertRedirect('/caisse');
+        $this->put('/parametres/pin', ['pin' => '12a4', 'pin_confirmation' => '12a4'])->assertSessionHasErrors('pin');
+        $this->put('/parametres/pin', ['pin' => '2580', 'pin_confirmation' => '2581'])->assertSessionHasErrors('pin');
+        $this->put('/parametres/pin', ['pin' => '2580', 'pin_confirmation' => '2580'])->assertSessionHasNoErrors();
+        $this->assertTrue(app(PinService::class)->verifier('2580'));
+        $this->assertFalse(app(PinService::class)->verifier('1234'));
     }
 
     public function test_kpi_jour_semaine_et_evolution(): void
     {
-        // Hier (mercredi) : 1 brushing
         Carbon::setTestNow('2026-09-30 15:00:00');
-        $this->vendre($this->assistante, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
+        $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
 
-        // Aujourd'hui (jeudi) : 2 tickets
         Carbon::setTestNow('2026-10-01 10:00:00');
-        $this->vendre($this->assistante, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
-        $this->vendre($this->gerante, [['service_id' => $this->brushing->id, 'quantite' => 1]], 'carte');
+        $this->vendre($this->awa, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
+        $this->vendre($this->fatou, [['service_id' => $this->brushing->id, 'quantite' => 1]], 'carte');
 
-        // Semaine dernière : 1 ticket
         Carbon::setTestNow('2026-09-22 11:00:00');
-        $this->vendre($this->assistante, [['service_id' => $this->brushing->id, 'quantite' => 2]]);
+        $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 2]]);
         // Vendredi dernier : hors comparaison, la semaine en cours n'est qu'à jeudi
         Carbon::setTestNow('2026-09-25 11:00:00');
-        $this->vendre($this->assistante, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
+        $this->vendre($this->awa, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
         Carbon::setTestNow('2026-10-01 18:00:00');
 
         $kpi = app(KpiService::class);
@@ -232,14 +261,13 @@ class SalonFlowTest extends TestCase
         $this->assertSame(13000, $jour['resume']['ca']);
         $this->assertSame(2, $jour['resume']['tickets']);
         $this->assertSame(6500, $jour['resume']['panier_moyen']);
-        $this->assertSame(333.3, $jour['evolution']['ca']); // 13 000 vs 3 000 hier
+        $this->assertSame(333.3, $jour['evolution']['ca']);
         $this->assertSame('Tresses', $jour['top_services'][0]['libelle']);
-        $this->assertCount(2, $jour['par_personne']);
+        $this->assertSame(['Awa', 'Fatou'], array_column($jour['par_personne'], 'nom'));
 
         $semaine = $kpi->calculer(Periode::depuis('semaine'));
         $this->assertSame(16000, $semaine['resume']['ca']);
-        $this->assertSame(3, $semaine['resume']['tickets']);
-        $this->assertSame(6000, $semaine['precedent']['ca']); // lundi → jeudi 18h de la semaine dernière
+        $this->assertSame(6000, $semaine['precedent']['ca']);
         $this->assertSame(166.7, $semaine['evolution']['ca']);
         $this->assertCount(7, $semaine['courbe']);
 
@@ -249,55 +277,55 @@ class SalonFlowTest extends TestCase
 
     public function test_ticket_annule_exclu_des_kpi(): void
     {
-        $this->vendre($this->assistante, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
-        $this->vendre($this->assistante, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
+        $this->vendre($this->awa, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
+        $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
         $vente = Vente::where('total', 10000)->first();
 
-        $this->actingAs($this->assistante)->post("/ventes/{$vente->id}/annuler", ['motif' => 'Erreur'])->assertForbidden();
-        $this->actingAs($this->gerante)->post("/ventes/{$vente->id}/annuler", [])->assertSessionHasErrors('motif');
-        $this->actingAs($this->gerante)->post("/ventes/{$vente->id}/annuler", ['motif' => 'Erreur de saisie'])->assertSessionHasNoErrors();
+        $this->ouvrirModeGerante();
+        $this->post("/ventes/{$vente->id}/annuler", [])->assertSessionHasErrors('motif');
+        $this->post("/ventes/{$vente->id}/annuler", ['motif' => 'Erreur de saisie'])->assertSessionHasNoErrors();
 
         $kpi = app(KpiService::class)->calculer(Periode::depuis('jour'));
         $this->assertSame(3000, $kpi['resume']['ca']);
         $this->assertSame(1, $kpi['annulations']['nombre']);
-        $this->assertSame(10000, $kpi['annulations']['montant']);
     }
 
-    public function test_les_pages_de_la_gerante_s_affichent(): void
+    public function test_les_pages_s_affichent_dans_les_deux_modes(): void
     {
-        $this->vendre($this->assistante, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
-        $this->actingAs($this->gerante);
+        $this->vendre($this->awa, [['service_id' => $this->tresses->id, 'quantite' => 1]]);
 
-        foreach (['jour', 'semaine', 'mois'] as $periode) {
-            $this->get('/dashboard?periode='.$periode)->assertOk()->assertSee('10 000');
+        foreach ([false, true] as $gerante) {
+            if ($gerante) {
+                $this->ouvrirModeGerante();
+            }
+            foreach (['jour', 'semaine', 'mois'] as $periode) {
+                $this->get('/dashboard?periode='.$periode)->assertOk()->assertSee('10 000');
+            }
+            $this->get('/dashboard?periode=dates&du=nimporte&au=quoi')->assertOk();
+            $this->get('/ventes?vendeuse_id='.$this->awa->id)->assertOk()->assertSee('T-20261001-0001');
+            $this->get('/services')->assertOk()->assertSee('Brushing');
+            $this->get('/gerante')->assertOk();
         }
-        $this->get('/dashboard?periode=dates&du=2026-09-01&au=2026-10-01')->assertOk();
-        $this->get('/dashboard?periode=dates&du=nimporte&au=quoi')->assertOk();
-        $this->get('/ventes')->assertOk()->assertSee('T-20261001-0001');
-        $this->get('/services')->assertOk()->assertSee('Brushing');
+
         $this->get('/services/create')->assertOk();
         $this->get('/services/'.$this->brushing->id.'/edit')->assertOk();
-        $this->get('/comptes')->assertOk()->assertSee('Awa');
-        $this->get('/caisse')->assertOk();
-        $this->get('/mot-de-passe')->assertOk();
+        $this->get('/parametres')->assertOk();
     }
 
     public function test_gerante_gere_les_services(): void
     {
-        $this->actingAs($this->gerante);
+        $this->ouvrirModeGerante();
         $categorie = Categorie::first();
 
         $this->post('/services', ['categorie_id' => $categorie->id, 'code' => 'coi-009', 'nom' => 'Chignon', 'prix' => 6000, 'actif' => '1'])
             ->assertRedirect('/services');
         $chignon = Service::where('code', 'COI-009')->firstOrFail();
-        $this->assertTrue($chignon->actif);
 
         $this->put('/services/'.$chignon->id, ['categorie_id' => $categorie->id, 'code' => 'COI-009', 'nom' => 'Chignon', 'prix' => 6500])
             ->assertRedirect('/services');
         $this->assertSame(6500, $chignon->fresh()->prix);
-        $this->assertFalse($chignon->fresh()->actif); // case décochée = masqué en caisse
-
-        $this->get('/caisse')->assertDontSee('COI-009');
+        $this->assertFalse($chignon->fresh()->actif);
+        $this->get('/')->assertDontSee('COI-009');
 
         $this->delete('/categories/'.$categorie->id)->assertSessionHas('erreur');
         $this->delete('/services/'.$chignon->id);

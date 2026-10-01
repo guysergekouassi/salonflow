@@ -6,6 +6,21 @@
 @section('contenu')
 <div class="caisse">
     <section class="catalogue">
+        <div class="kpis-jour">
+            <a class="kpi-jour principal-kpi" href="{{ route('dashboard') }}" title="Voir tous les KPI">
+                <span>Chiffre d'affaires du jour</span>
+                <b id="kpi-ca">{{ \App\Support\Fcfa::format($jour['ca']) }}</b>
+            </a>
+            <a class="kpi-jour" href="{{ route('ventes.index') }}" title="Voir les tickets du jour">
+                <span>Tickets du jour</span>
+                <b id="kpi-tickets">{{ $jour['tickets'] }}</b>
+            </a>
+            <a class="kpi-jour" href="{{ route('dashboard') }}">
+                <span>Panier moyen</span>
+                <b id="kpi-panier">{{ \App\Support\Fcfa::format($jour['panier_moyen']) }}</b>
+            </a>
+        </div>
+
         <div class="recherche">
             <div class="champ-recherche">
                 @include('partials.icone', ['nom' => 'recherche'])
@@ -27,7 +42,7 @@
         @if($services->isEmpty())
             <div class="carte vide">
                 Aucun service actif.
-                @if(auth()->user()->isGerante())<a href="{{ route('services.create') }}">Ajouter un service</a>@endif
+                <a href="{{ route('services.create') }}">Ajouter un service</a>
             </div>
         @endif
     </section>
@@ -37,6 +52,15 @@
             <h3>@include('partials.icone', ['nom' => 'ticket']) Ticket</h3>
             <button type="button" class="btn btn-petit" id="vider" hidden>Vider</button>
         </div>
+
+        @if($vendeuses->isNotEmpty())
+            <div class="vendeuses" id="vendeuses">
+                <span class="small muted">Vendeuse :</span>
+                @foreach($vendeuses as $vendeuse)
+                    <button type="button" data-id="{{ $vendeuse->id }}">{{ $vendeuse->nom }}</button>
+                @endforeach
+            </div>
+        @endif
 
         <div class="ticket-lignes" id="lignes">
             <div class="ticket-vide" id="ticket-vide">
@@ -92,6 +116,8 @@
         services: @json($services),
         url: @json(route('caisse.store')),
         csrf: @json(csrf_token()),
+        vendeuses: @json($vendeuses->pluck('id')),
+        jour: @json($jour),
     };
 </script>
 <script src="{{ asset('js/caisse.js') }}?v={{ filemtime(public_path('js/caisse.js')) }}"></script>

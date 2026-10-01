@@ -38,10 +38,14 @@
                     <td>
                         <div class="actions">
                             <a class="btn-ico btn-modifier" href="{{ route('services.edit', $service) }}" title="Modifier">@include('partials.icone', ['nom' => 'modifier'])</a>
+                            @if($modeGerante)
                             <form method="POST" action="{{ route('services.destroy', $service) }}" onsubmit="return confirm('Supprimer « {{ addslashes($service->nom) }} » ? Les anciens tickets restent intacts.')">
                                 @csrf @method('DELETE')
                                 <button class="btn-ico btn-supprimer" type="submit" title="Supprimer">@include('partials.icone', ['nom' => 'poubelle'])</button>
                             </form>
+                            @else
+                            <a class="btn-ico btn-supprimer" href="{{ route('gerante.create', ['retour' => url()->full()]) }}" title="Supprimer (code PIN gérante)">@include('partials.icone', ['nom' => 'poubelle'])</a>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -53,6 +57,7 @@
     <div class="carte">
         <div class="carte-titre"><h3>Catégories</h3></div>
         <div class="carte-corps">
+        @if($modeGerante)
             @foreach($categories as $c)
                 <form method="POST" action="{{ route('categories.update', $c) }}" class="filtres-dates" style="margin-bottom:10px;flex-wrap:nowrap">
                     @csrf @method('PUT')
@@ -72,6 +77,14 @@
                 <input type="text" name="nom" placeholder="Ex. Maquillage" required>
                 <button class="btn btn-petit btn-primaire" type="submit">Ajouter</button>
             </form>
+        @else
+            <div class="liste-barres">
+                @foreach($categories as $c)
+                    <div class="ligne-haut"><span><span class="pastille" style="background:{{ $c->couleur }}"></span>{{ $c->nom }}</span><span class="muted small">{{ $c->services_count }} service(s)</span></div>
+                @endforeach
+            </div>
+            <a class="btn btn-petit" style="margin-top:16px" href="{{ route('gerante.create', ['retour' => url()->full()]) }}">@include('partials.icone', ['nom' => 'cle']) Modifier les catégories</a>
+        @endif
         </div>
     </div>
 </div>

@@ -72,7 +72,7 @@
         @endif
     </table>
     <div class="sep"></div>
-    <div class="centre">Servi par : {{ $vente->user?->name ?? '—' }}</div>
+    @if($vente->vendeuse)<div class="centre">Servi par : {{ $vente->vendeuse->nom }}</div>@endif
     <div class="centre" style="margin-top:4px">{{ config('salon.message_ticket') }}</div>
 </div>
 

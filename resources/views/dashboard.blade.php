@@ -108,7 +108,7 @@
     </div>
 
     <div class="carte">
-        <div class="carte-titre"><h3>@include('partials.icone', ['nom' => 'utilisateurs']) Ventes par personne</h3></div>
+        <div class="carte-titre"><h3>@include('partials.icone', ['nom' => 'utilisateurs']) Ventes par vendeuse</h3></div>
         <div class="carte-corps">
             <div class="liste-barres">
                 @forelse($kpi['par_personne'] as $p)

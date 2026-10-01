@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Service;
-use App\Models\User;
+use App\Models\Vendeuse;
 use App\Models\Vente;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -15,7 +15,7 @@ class VenteService
      *
      * @param  array<int, array{service_id:int, quantite:int}>  $lignes
      */
-    public function enregistrer(User $caissiere, array $lignes, string $modePaiement, ?int $montantRecu = null): Vente
+    public function enregistrer(?Vendeuse $vendeuse, array $lignes, string $modePaiement, ?int $montantRecu = null): Vente
     {
         $quantites = [];
         foreach ($lignes as $ligne) {
@@ -42,10 +42,10 @@ class VenteService
             ]);
         }
 
-        return DB::transaction(function () use ($caissiere, $quantites, $services, $total, $modePaiement, $montantRecu) {
+        return DB::transaction(function () use ($vendeuse, $quantites, $services, $total, $modePaiement, $montantRecu) {
             $vente = Vente::create([
                 'numero' => $this->prochainNumero(),
-                'user_id' => $caissiere->id,
+                'vendeuse_id' => $vendeuse?->id,
                 'total' => $total,
                 'mode_paiement' => $modePaiement,
                 'montant_recu' => $modePaiement === 'especes' ? ($montantRecu ?? $total) : null,
@@ -68,7 +68,7 @@ class VenteService
         });
     }
 
-    public function annuler(Vente $vente, User $gerante, string $motif): void
+    public function annuler(Vente $vente, string $motif): void
     {
         if ($vente->estAnnulee()) {
             throw ValidationException::withMessages(['motif' => 'Ce ticket est déjà annulé.']);
@@ -76,7 +76,6 @@ class VenteService
 
         $vente->update([
             'annulee_at' => now(),
-            'annulee_par' => $gerante->id,
             'motif_annulation' => $motif,
         ]);
     }

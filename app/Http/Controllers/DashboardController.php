@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Vendeuse;
 use App\Models\Vente;
 use App\Services\KpiService;
 use App\Services\VenteService;
@@ -22,7 +22,7 @@ class DashboardController extends Controller
 
         return view('dashboard', [
             'kpi' => $kpi->calculer($periode),
-            'derniers' => Vente::with(['user', 'lignes'])
+            'derniers' => Vente::with(['vendeuse', 'lignes'])
                 ->whereBetween('created_at', [$periode->debut, $periode->fin])
                 ->latest()->limit(8)->get(),
         ]);
@@ -32,9 +32,9 @@ class DashboardController extends Controller
     {
         $periode = $this->periode($request);
 
-        $ventes = Vente::with(['user', 'lignes'])
+        $ventes = Vente::with(['vendeuse', 'lignes'])
             ->whereBetween('created_at', [$periode->debut, $periode->fin])
-            ->when($request->integer('user_id'), fn ($q, $id) => $q->where('user_id', $id))
+            ->when($request->integer('vendeuse_id'), fn ($q, $id) => $q->where('vendeuse_id', $id))
             ->when($request->input('statut') === 'annulees', fn ($q) => $q->whereNotNull('annulee_at'))
             ->latest()
             ->limit(self::MAX_LIGNES)
@@ -43,7 +43,7 @@ class DashboardController extends Controller
         return view('ventes.index', [
             'periode' => $periode,
             'ventes' => $ventes,
-            'personnes' => User::orderBy('name')->get(['id', 'name']),
+            'vendeuses' => Vendeuse::orderBy('nom')->get(['id', 'nom']),
         ]);
     }
 
@@ -53,7 +53,7 @@ class DashboardController extends Controller
             'motif' => ['required', 'string', 'max:255'],
         ], ['motif.required' => 'Indiquez le motif de l\'annulation.']);
 
-        $service->annuler($vente, $request->user(), $data['motif']);
+        $service->annuler($vente, $data['motif']);
 
         return back()->with('succes', "Ticket {$vente->numero} annulé : il ne compte plus dans les ventes.");
     }

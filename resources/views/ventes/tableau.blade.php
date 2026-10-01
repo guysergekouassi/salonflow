@@ -10,7 +10,7 @@
             <th>Ticket</th>
             <th>Date</th>
             <th>Services</th>
-            <th>Vendu par</th>
+            <th>Vendeuse</th>
             <th>Paiement</th>
             <th class="right">Total</th>
             <th>Statut</th>
@@ -23,7 +23,7 @@
             <td class="mono nowrap"><b class="barre-texte">{{ $vente->numero }}</b></td>
             <td class="nowrap" data-tri="{{ $vente->created_at->timestamp }}">{{ $vente->created_at->format('d/m/Y H:i') }}</td>
             <td class="small">{{ $vente->lignes->map(fn ($l) => ($l->quantite > 1 ? $l->quantite.'× ' : '').$l->libelle)->implode(', ') }}</td>
-            <td>{{ $vente->user?->name }}</td>
+            <td>{{ $vente->vendeuse?->nom ?? '—' }}</td>
             <td><span class="badge badge-bleu">{{ $vente->libelleModePaiement() }}</span></td>
             <td class="right nowrap" data-tri="{{ $vente->total }}" data-export="{{ $vente->total }}"><b class="barre-texte">{{ Fcfa::format($vente->total) }}</b></td>
             <td>
@@ -36,7 +36,9 @@
             <td>
                 <div class="actions">
                     <a class="btn-ico btn-voir" href="{{ route('tickets.show', $vente) }}" title="Voir / réimprimer le ticket">@include('partials.icone', ['nom' => 'oeil'])</a>
-                    @if(! $vente->estAnnulee())
+                    @if(! $vente->estAnnulee() && ! $modeGerante)
+                        <a class="btn-ico btn-supprimer" href="{{ route('gerante.create', ['retour' => url()->full()]) }}" title="Annuler le ticket (code PIN gérante)">@include('partials.icone', ['nom' => 'interdit'])</a>
+                    @elseif(! $vente->estAnnulee())
                         <form method="POST" action="{{ route('ventes.annuler', $vente) }}"
                               onsubmit="const m = prompt('Motif de l\'annulation du ticket {{ $vente->numero }} ?'); if (!m) return false; this.motif.value = m;">
                             @csrf

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Categorie;
-use App\Models\User;
 use App\Models\Vente;
 use App\Support\Periode;
 use Illuminate\Support\Collection;
@@ -11,14 +10,14 @@ use Illuminate\Support\Collection;
 class KpiService
 {
     /**
-     * Tous les indicateurs d'une période. Avec $user, seulement les ventes de cette personne.
+     * Tous les indicateurs d'une période.
      * Les calculs sont faits en PHP : le volume d'un salon reste faible et ça marche sur SQLite comme MySQL.
      */
-    public function calculer(Periode $periode, ?User $user = null): array
+    public function calculer(Periode $periode): array
     {
-        $ventes = $this->ventes($periode, $user);
+        $ventes = $this->ventes($periode);
         $resume = $this->resume($ventes);
-        $precedent = $this->resume($this->ventes($periode->precedente(), $user));
+        $precedent = $this->resume($this->ventes($periode->precedente()));
 
         $lignes = $ventes->flatMap->lignes;
 
@@ -50,25 +49,23 @@ class KpiService
                     'part' => $resume['ca'] > 0 ? round($v->sum('total') * 100 / $resume['ca']) : 0,
                 ])
                 ->sortByDesc('ca')->values()->all(),
-            'par_personne' => $user ? [] : $ventes->groupBy('user_id')
+            'par_personne' => $ventes->groupBy(fn (Vente $v) => (int) $v->vendeuse_id)
                 ->map(fn (Collection $v) => [
-                    'nom' => $v->first()->user?->name ?? '—',
-                    'role' => $v->first()->user?->role,
+                    'nom' => $v->first()->vendeuse?->nom ?? 'Non renseignée',
                     'tickets' => $v->count(),
                     'ca' => $v->sum('total'),
                     'panier_moyen' => (int) round($v->avg('total')),
                 ])
                 ->sortByDesc('ca')->values()->all(),
-            'annulations' => $this->annulations($periode, $user),
+            'annulations' => $this->annulations($periode),
         ];
     }
 
-    private function ventes(Periode $periode, ?User $user): Collection
+    private function ventes(Periode $periode): Collection
     {
         return Vente::valides()
             ->whereBetween('created_at', [$periode->debut, $periode->fin])
-            ->when($user, fn ($q) => $q->where('user_id', $user->id))
-            ->with(['lignes', 'user'])
+            ->with(['lignes', 'vendeuse'])
             ->get();
     }
 
@@ -154,11 +151,10 @@ class KpiService
             ->values()->all();
     }
 
-    private function annulations(Periode $periode, ?User $user): array
+    private function annulations(Periode $periode): array
     {
         $annulees = Vente::whereNotNull('annulee_at')
-            ->whereBetween('created_at', [$periode->debut, $periode->fin])
-            ->when($user, fn ($q) => $q->where('user_id', $user->id));
+            ->whereBetween('created_at', [$periode->debut, $periode->fin]);
 
         return ['nombre' => (clone $annulees)->count(), 'montant' => (int) $annulees->sum('total')];
     }

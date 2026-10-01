@@ -1,10 +1,18 @@
 // Caisse : le ticket vit dans le navigateur, le serveur recalcule les prix à l'encaissement.
 (function () {
-    const { services, url, csrf } = window.CAISSE;
+    const { services, url, csrf, vendeuses, jour } = window.CAISSE;
     const parId = new Map(services.map((s) => [s.id, s]));
     const panier = new Map(); // id du service -> quantité
     let categorie = '';
     let envoiEnCours = false;
+
+    // ---------- Vendeuse : reste sélectionnée d'une vente à l'autre (et après rechargement) ----------
+    let vendeuse = null;
+    try {
+        const memo = Number(localStorage.getItem('salonflow.vendeuse'));
+        if (vendeuses.includes(memo)) vendeuse = memo;
+    } catch (e) { /* stockage indisponible : on choisit à chaque ouverture */ }
+    if (vendeuses.length === 1) vendeuse = vendeuses[0];
 
     const el = (id) => document.getElementById(id);
     const grille = el('grille');
@@ -151,6 +159,31 @@
         afficherMonnaie();
     });
 
+    const zoneVendeuses = el('vendeuses');
+    function afficherVendeuse() {
+        if (!zoneVendeuses) return;
+        zoneVendeuses.querySelectorAll('button').forEach((b) => b.classList.toggle('actif', Number(b.dataset.id) === vendeuse));
+    }
+    if (zoneVendeuses) {
+        zoneVendeuses.addEventListener('click', (e) => {
+            const bouton = e.target.closest('button[data-id]');
+            if (!bouton) return;
+            vendeuse = Number(bouton.dataset.id);
+            zoneVendeuses.classList.remove('a-choisir');
+            try { localStorage.setItem('salonflow.vendeuse', vendeuse); } catch (err) { /* ignoré */ }
+            el('message').textContent = '';
+            afficherVendeuse();
+        });
+    }
+
+    function majKpiJour(montant) {
+        jour.ca += montant;
+        jour.tickets += 1;
+        el('kpi-ca').textContent = fcfa(jour.ca);
+        el('kpi-tickets').textContent = jour.tickets;
+        el('kpi-panier').textContent = fcfa(Math.round(jour.ca / jour.tickets));
+    }
+
     function vider() {
         el('recu').value = '';
         document.querySelector('input[name=mode]').checked = true;
@@ -159,6 +192,14 @@
 
     async function encaisser() {
         if (el('encaisser').disabled) return;
+        if (vendeuses.length && !vendeuse) {
+            zoneVendeuses.classList.remove('a-choisir');
+            void zoneVendeuses.offsetWidth;
+            zoneVendeuses.classList.add('a-choisir');
+            el('message').className = 'ticket-message erreur-msg';
+            el('message').textContent = 'Touchez d\'abord le nom de la vendeuse.';
+            return;
+        }
         envoiEnCours = true;
         afficherMonnaie();
         const message = el('message');
@@ -171,6 +212,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
                 body: JSON.stringify({
+                    vendeuse_id: vendeuse,
                     lignes: [...panier].map(([service_id, quantite]) => ({ service_id, quantite })),
                     mode_paiement: modePaiement(),
                     montant_recu: especes && el('recu').value !== '' ? Number(el('recu').value) : null,
@@ -188,6 +230,7 @@
 
             // Impression dans un cadre caché : la caisse reste ouverte, prête pour le client suivant
             el('impression').src = donnees.ticket_url + '&cadre=1';
+            majKpiJour(donnees.total);
             panier.clear();
             vider();
             message.className = 'ticket-message';
@@ -218,5 +261,6 @@
         el('recherche').select();
     });
 
+    afficherVendeuse();
     afficher();
 })();
