@@ -94,6 +94,10 @@ changer un prix plus tard ne modifie pas l'historique.
 3. `demarrer-salon.bat` lance Chrome avec `--kiosk-printing` : le ticket part **directement** sur l'imprimante,
    sans fenêtre d'impression.
 
+Le ticket porte le **logo du salon** en haut et en **filigrane** très clair derrière le texte
+(`public/images/logo-ticket.png` et `public/images/filigrane-ticket.png`, en niveaux de gris pour l'impression thermique).
+Pour les retirer : `TICKET_LOGO=false` et/ou `TICKET_FILIGRANE=false` dans `.env`.
+
 **Mode direct ESC/POS (`TICKET_DRIVER=escpos`)** — si l'imprimante doit couper le papier automatiquement ou si
 le pilote Windows pose problème :
 

@@ -18,6 +18,9 @@ return [
     'ticket' => [
         // Largeur du papier de l'imprimante thermique : 80 ou 58 (mm)
         'largeur_mm' => (int) env('TICKET_LARGEUR_MM', 80),
+        // Logo du salon en haut du ticket, et en filigrane derrière le texte (mettre false pour les retirer)
+        'logo' => (bool) env('TICKET_LOGO', true),
+        'filigrane' => (bool) env('TICKET_FILIGRANE', true),
         // navigateur : ticket HTML imprimé par Chrome (fonctionne partout)
         // escpos     : impression directe sur l'imprimante (composer require mike42/escpos-php)
         'driver' => env('TICKET_DRIVER', 'navigateur'),

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Vente;
 use App\Support\Fcfa;
 use Illuminate\Support\Str;
+use Mike42\Escpos\EscposImage;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
@@ -42,6 +43,7 @@ class TicketService
 
         try {
             $imprimante->setJustification(Printer::JUSTIFY_CENTER);
+            $this->imprimerLogo($imprimante);
             $imprimante->setEmphasis(true);
             $imprimante->text($t(config('salon.nom'))."\n");
             $imprimante->setEmphasis(false);
@@ -83,6 +85,25 @@ class TicketService
             $imprimante->cut();
         } finally {
             $imprimante->close();
+        }
+    }
+
+    /**
+     * Logo en tête du ticket. Le filigrane n'existe qu'en mode navigateur :
+     * une imprimante ESC/POS ne sait pas superposer une image et du texte.
+     */
+    private function imprimerLogo(Printer $imprimante): void
+    {
+        $fichier = public_path('images/logo-ticket.png');
+
+        if (! config('salon.ticket.logo') || ! is_file($fichier)) {
+            return;
+        }
+
+        try {
+            $imprimante->bitImage(EscposImage::load($fichier, false));
+        } catch (\Throwable $e) {
+            report($e); // pas d'extension GD/Imagick : on imprime le ticket sans logo
         }
     }
 }

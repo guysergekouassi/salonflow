@@ -188,6 +188,17 @@ class SalonFlowTest extends TestCase
         $this->get('/')->assertSee('"variable":true', false);
     }
 
+    public function test_le_ticket_porte_le_logo_et_le_filigrane(): void
+    {
+        $this->vendre($this->awa, [['service_id' => $this->brushing->id, 'quantite' => 1]]);
+        $url = '/tickets/'.Vente::first()->id;
+
+        $this->get($url)->assertSee('images/logo-ticket.png')->assertSee('images/filigrane-ticket.png');
+
+        config(['salon.ticket.logo' => false, 'salon.ticket.filigrane' => false]);
+        $this->get($url)->assertDontSee('images/logo-ticket.png')->assertDontSee('images/filigrane-ticket.png');
+    }
+
     public function test_seules_les_especes_sont_acceptees(): void
     {
         $ligne = [['service_id' => $this->brushing->id, 'quantite' => 1]];

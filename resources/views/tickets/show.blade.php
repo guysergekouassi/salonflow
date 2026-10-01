@@ -12,7 +12,14 @@
     <style>
         @page { size: {{ $largeur }}mm auto; margin: 0; }
         body { font-family: 'Courier New', Consolas, monospace; font-size: {{ $largeur === 58 ? 11 : 12 }}px; margin: 0; background: #f1f5f9; color: #000; }
-        .ticket { width: {{ $largeur - 8 }}mm; margin: 12px auto; padding: 3mm 4mm; background: #fff; }
+        .ticket { width: {{ $largeur - 8 }}mm; margin: 12px auto; padding: 3mm 4mm; background: #fff; position: relative; overflow: hidden; }
+        /* Logo et filigrane : images en niveaux de gris préparées pour l'impression thermique */
+        .logo { display: block; width: {{ $largeur === 58 ? 18 : 22 }}mm; height: auto; margin: 0 auto 2mm; }
+        .filigrane {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            width: {{ $largeur === 58 ? 40 : 56 }}mm; height: auto; pointer-events: none; z-index: 0;
+        }
+        .ticket > *:not(.filigrane) { position: relative; z-index: 1; }
         .centre { text-align: center; }
         .gras { font-weight: bold; }
         .nom-salon { font-size: {{ $largeur === 58 ? 14 : 16 }}px; font-weight: bold; }
@@ -40,6 +47,12 @@
 @if(session('erreur'))<div class="alerte" style="background:#fee2e2;color:#991b1b">{{ session('erreur') }}</div>@endif
 
 <div class="ticket">
+    @if(config('salon.ticket.filigrane'))
+        <img class="filigrane" src="{{ asset('images/filigrane-ticket.png') }}" alt="">
+    @endif
+    @if(config('salon.ticket.logo'))
+        <img class="logo" src="{{ asset('images/logo-ticket.png') }}" alt="{{ config('salon.nom') }}">
+    @endif
     <div class="centre nom-salon">{{ config('salon.nom') }}</div>
     <div class="centre">{{ config('salon.adresse') }}</div>
     @if(config('salon.telephone'))<div class="centre">Tél : {{ config('salon.telephone') }}</div>@endif
