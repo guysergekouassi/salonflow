@@ -1,6 +1,7 @@
 @php
     use App\Support\Fcfa;
     $largeur = config('salon.ticket.largeur_mm') === 58 ? 58 : 80;
+    $a4 = config('salon.ticket.papier') === 'a4';
     $cadre = request()->boolean('cadre');
     $autoImpression = request()->boolean('imprimer') && config('salon.ticket.driver') === 'navigateur';
 @endphp
@@ -10,7 +11,8 @@
     <meta charset="utf-8">
     <title>Ticket {{ $vente->numero }}</title>
     <style>
-        @page { size: {{ $largeur }}mm auto; margin: 0; }
+        {{-- Thermique : le format du rouleau est donné par l'imprimante. A4 : ticket en haut de la feuille. --}}
+        @page { margin: {{ $a4 ? '10mm' : '0' }}; @if($a4) size: A4 portrait; @endif }
         body { font-family: 'Courier New', Consolas, monospace; font-size: {{ $largeur === 58 ? 11 : 12 }}px; margin: 0; background: #f1f5f9; color: #000; }
         .ticket { width: {{ $largeur - 8 }}mm; margin: 12px auto; padding: 3mm 4mm; background: #fff; position: relative; overflow: hidden; }
         /* Logo et filigrane : images en niveaux de gris préparées pour l'impression thermique */
@@ -37,8 +39,12 @@
         .alerte { max-width: 72mm; margin: 12px auto 0; padding: 8px; border-radius: 6px; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
         @media print {
             body { background: #fff; }
-            .ticket { margin: 0; width: auto; }
+            /* Le ticket garde sa largeur de ticket, même sur une feuille A4 */
+            .ticket { margin: 0 auto; width: {{ $largeur - 8 }}mm; }
             .actions, .alerte { display: none; }
+            @if($a4)
+            .ticket { border: 1px dashed #999; margin-top: 0; }
+            @endif
         }
     </style>
 </head>

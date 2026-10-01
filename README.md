@@ -98,6 +98,9 @@ Le ticket porte le **logo du salon** en haut et en **filigrane** très clair der
 (`public/images/logo-ticket.png` et `public/images/filigrane-ticket.png`, en niveaux de gris pour l'impression thermique).
 Pour les retirer : `TICKET_LOGO=false` et/ou `TICKET_FILIGRANE=false` dans `.env`.
 
+**Imprimante classique A4** (ex. Canon G2010) : mettre `TICKET_PAPIER=a4` dans `.env`. Le ticket garde sa largeur
+de ticket, en haut de la feuille, avec un pointillé pour le découper.
+
 **Mode direct ESC/POS (`TICKET_DRIVER=escpos`)** — si l'imprimante doit couper le papier automatiquement ou si
 le pilote Windows pose problème :
 

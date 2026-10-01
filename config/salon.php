@@ -18,6 +18,8 @@ return [
     'ticket' => [
         // Largeur du papier de l'imprimante thermique : 80 ou 58 (mm)
         'largeur_mm' => (int) env('TICKET_LARGEUR_MM', 80),
+        // Papier de l'imprimante : thermique (rouleau 80/58 mm) ou a4 (imprimante classique, ticket en haut de la feuille)
+        'papier' => env('TICKET_PAPIER', 'thermique'),
         // Logo du salon en haut du ticket, et en filigrane derrière le texte (mettre false pour les retirer)
         'logo' => (bool) env('TICKET_LOGO', true),
         'filigrane' => (bool) env('TICKET_FILIGRANE', true),

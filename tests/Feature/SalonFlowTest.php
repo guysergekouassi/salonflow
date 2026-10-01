@@ -195,6 +195,11 @@ class SalonFlowTest extends TestCase
 
         $this->get($url)->assertSee('images/logo-ticket.png')->assertSee('images/filigrane-ticket.png');
 
+        // Le ticket garde sa largeur à l'impression (pas de pleine largeur sur A4), format valide
+        $this->get($url)->assertDontSee('width: auto', false)->assertDontSee('mm auto', false);
+        config(['salon.ticket.papier' => 'a4']);
+        $this->get($url)->assertSee('size: A4 portrait', false)->assertSee('border: 1px dashed', false);
+
         config(['salon.ticket.logo' => false, 'salon.ticket.filigrane' => false]);
         $this->get($url)->assertDontSee('images/logo-ticket.png')->assertDontSee('images/filigrane-ticket.png');
     }
