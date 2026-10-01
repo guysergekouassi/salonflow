@@ -53,7 +53,7 @@ Après ça, **plus besoin d'internet** : tout tourne sur le PC (base SQLite, auc
 - **Chaque jour** : double-cliquer sur l'icône **SalonFlow**. Elle démarre le serveur local dans une fenêtre réduite
   (ne pas la fermer) et ouvre la caisse dans sa propre fenêtre, avec le logo dans la barre des tâches.
   Si la caisse est déjà ouverte, l'icône rouvre simplement la fenêtre.
-- Autre possibilité : dans Chrome, sur http://127.0.0.1:8000, menu ⋮ → *Caster, enregistrer et partager* →
+- Autre possibilité : dans Chrome, sur http://127.0.0.1:8008, menu ⋮ → *Caster, enregistrer et partager* →
   *Installer la page en tant qu'application* (le serveur doit alors être démarré avec `demarrer-salon.bat`).
 - Première connexion : `gerante@salon.local` / `ChangeMoi!2026`.
   **Changer le mot de passe tout de suite** (menu en haut à droite → *Mon mot de passe*).

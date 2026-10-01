@@ -2,8 +2,8 @@
 REM Lance la caisse SalonFlow sur ce PC (aucune connexion internet necessaire)
 cd /d "%~dp0"
 
-REM Port de la caisse : a changer ici si 8000 est deja pris par une autre application
-set PORT=8000
+REM Port de la caisse : a changer ici si 8008 est deja pris par une autre application
+set PORT=8008
 
 REM Demarre le serveur local dans une fenetre reduite, sauf s'il tourne deja
 netstat -ano | findstr /r /c:"127.0.0.1:%PORT% .*LISTENING" >nul
