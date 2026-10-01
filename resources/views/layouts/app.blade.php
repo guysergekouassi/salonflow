@@ -12,14 +12,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('titre', 'SalonFlow') — {{ config('salon.nom') }}</title>
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" href="{{ asset('images/logo.jpg') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
 </head>
 <body class="@yield('classe-body')">
 <div class="app">
     <aside class="sidebar">
         <div class="marque">
-            <div class="logo">S</div>
+            <img class="logo-image" src="{{ asset('images/logo.jpg') }}" alt="">
             <div><strong>SalonFlow</strong><span>Caisse salon de coiffure</span></div>
         </div>
         <div class="salon">

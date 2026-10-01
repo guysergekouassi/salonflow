@@ -50,15 +50,14 @@ svg.ico { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: non
     transition: transform .2s;
 }
 .sidebar .marque { display: flex; align-items: center; gap: 12px; padding: 20px 18px; }
-.sidebar .logo {
-    width: 40px; height: 40px; border-radius: 10px; background: var(--nuit-3); color: #fff;
-    display: grid; place-items: center; font-weight: 800; font-size: 18px; border: 1px solid rgba(255,255,255,.15);
-}
+.sidebar .logo-image { width: 44px; height: 44px; border: 2px solid #fcc1c5; }
 .sidebar .marque strong { color: #fff; font-size: 18px; display: block; }
 .sidebar .marque span { font-size: 12px; color: #94a3b8; }
 .sidebar .salon {
-    margin: 4px 14px 14px; padding: 10px 12px; border-radius: 10px; background: var(--nuit-2);
-    border: 1px solid rgba(255,255,255,.12);
+    margin: 4px 14px 14px; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); min-height: 72px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    background: linear-gradient(90deg, rgba(11,42,74,.92) 0%, rgba(11,42,74,.55) 60%, rgba(11,42,74,.15) 100%),
+                #fcc1c5 url("../images/salon.jpg") right 35% / 70% auto no-repeat;
 }
 .sidebar .salon small { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; }
 .sidebar .salon b { color: #fbbf24; font-size: 14px; }
@@ -358,10 +357,21 @@ body.page-caisse .contenu { padding: 0; display: flex; min-height: 0; }
 .ticket-message.erreur-msg { color: var(--rouge); }
 
 /* ---------- Connexion ---------- */
-.connexion { min-height: 100vh; display: grid; place-items: center; background: linear-gradient(135deg, var(--nuit) 0%, var(--nuit-3) 100%); padding: 20px; }
+.connexion { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(380px, 1fr); background: #fff; }
+.connexion .visuel-salon {
+    position: relative; background: #fcc1c5 url("../images/salon.jpg") center / cover no-repeat; min-height: 100vh;
+}
+.connexion .visuel-salon::after {
+    content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,42,74,0) 55%, rgba(11,42,74,.75) 100%);
+}
+.connexion .visuel-salon .legende { position: absolute; left: 40px; right: 40px; bottom: 40px; z-index: 1; color: #fff; }
+.connexion .visuel-salon .legende h2 { font-size: 32px; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.connexion .visuel-salon .legende p { margin: 6px 0 0; font-size: 16px; opacity: .95; }
+.connexion .cote-formulaire { display: grid; place-items: center; padding: 32px; background: var(--fond); }
 .connexion .boite { width: 100%; max-width: 400px; background: #fff; border-radius: 16px; padding: 32px; box-shadow: var(--ombre-forte); }
-.connexion .marque { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-.connexion .logo { width: 48px; height: 48px; border-radius: 12px; background: var(--nuit); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 22px; }
+.connexion .marque { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.logo-image { display: block; object-fit: cover; border-radius: 50%; flex: none; }
+.connexion .logo-image { width: 56px; height: 56px; border: 3px solid #fcc1c5; }
 
 /* ---------- Écrans plus petits ---------- */
 @media (max-width: 1280px) {
@@ -379,6 +389,12 @@ body.page-caisse .contenu { padding: 0; display: flex; min-height: 0; }
     body.menu-replie .sidebar { transform: translateX(-100%); }
     body.menu-replie .principal { margin-left: 0; }
     .entete .burger { display: block; }
+}
+@media (max-width: 900px) {
+    .connexion { grid-template-columns: 1fr; }
+    .connexion .visuel-salon { min-height: 220px; background-position: center 40%; }
+    .connexion .visuel-salon .legende { left: 24px; bottom: 20px; }
+    .connexion .visuel-salon .legende h2 { font-size: 24px; }
 }
 @media (max-width: 800px) {
     .caisse { flex-direction: column; }
