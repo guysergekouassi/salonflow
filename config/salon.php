@@ -2,9 +2,9 @@
 
 return [
 
-    'nom' => env('SALON_NOM', 'SalonFlow'),
-    'adresse' => env('SALON_ADRESSE', "Abidjan, Côte d'Ivoire"),
-    'telephone' => env('SALON_TELEPHONE', ''),
+    'nom' => env('SALON_NOM', 'MARIE COLOMBE ELEGANCE'),
+    'adresse' => env('SALON_ADRESSE', '2 Plateaux, gare de Marcory'),
+    'telephone' => env('SALON_TELEPHONE', '07 49 65 42 32'),
     'message_ticket' => env('SALON_MESSAGE_TICKET', 'Merci de votre visite, à bientôt !'),
 
     // Après le code PIN, le mode gérante (prix, annulations, vendeuses) reste ouvert X minutes

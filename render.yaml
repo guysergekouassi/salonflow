@@ -7,6 +7,8 @@ services:
     healthCheckPath: /up
     envVars:
       - key: SALON_NOM
-        value: Salon Démo
+        value: MARIE COLOMBE ELEGANCE
       - key: SALON_ADRESSE
-        value: Cocody, Abidjan
+        value: 2 Plateaux, gare de Marcory
+      - key: SALON_TELEPHONE
+        value: 07 49 65 42 32
