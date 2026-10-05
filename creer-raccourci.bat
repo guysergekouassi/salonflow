@@ -11,11 +11,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "  $lien = $shell.CreateShortcut((Join-Path $c 'SalonFlow.lnk'));" ^
   "  $lien.TargetPath = Join-Path $dossier 'demarrer-salon.bat';" ^
   "  $lien.WorkingDirectory = $dossier;" ^
-  "  $lien.IconLocation = (Join-Path $dossier 'public\logo.ico') + ',0';" ^
+  "  $lien.IconLocation = (Join-Path $dossier 'public\icone-salon.ico') + ',0';" ^
   "  $lien.Description = 'Caisse du salon';" ^
   "  $lien.WindowStyle = 7;" ^
   "  $lien.Save();" ^
-  "}"
+  "}" ^
+  "ie4uinit.exe -show"
 
 if errorlevel 1 (
     echo Impossible de creer le raccourci.

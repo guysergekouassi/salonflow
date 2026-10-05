@@ -8,6 +8,18 @@ set PORT=8008
 REM Met la base de donnees a jour apres une mise a jour du logiciel (sans effet si deja a jour)
 php artisan migrate --force >nul 2>&1
 
+REM Met a jour l'icone des raccourcis SalonFlow deja crees (bureau, menu Demarrer, barre des taches) apres un changement de logo
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$ico = (Join-Path (Get-Location).Path 'public\icone-salon.ico') + ',0';" ^
+  "$shell = New-Object -ComObject WScript.Shell;" ^
+  "$dossiers = @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'), (Join-Path $env:APPDATA 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar'));" ^
+  "$change = $false;" ^
+  "foreach ($d in $dossiers) {" ^
+  "  $f = Join-Path $d 'SalonFlow.lnk';" ^
+  "  if (Test-Path $f) { $l = $shell.CreateShortcut($f); if ($l.IconLocation -ne $ico) { $l.IconLocation = $ico; $l.Save(); $change = $true } }" ^
+  "}" ^
+  "if ($change) { ie4uinit.exe -show }" >nul 2>&1
+
 REM Demarre le serveur local dans une fenetre reduite, sauf s'il tourne deja
 netstat -ano | findstr /r /c:"127.0.0.1:%PORT% .*LISTENING" >nul
 if errorlevel 1 (
