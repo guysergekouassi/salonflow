@@ -44,7 +44,7 @@ TICKET_LARGEUR_MM=80        # 58 si le papier est étroit
 ```
 
 L'image du salon (menu) se trouve dans `public/images/salon.jpg`, et le logo rond dans
-`public/images/logo.jpg` (carré, environ 160 × 160 px). Pour les changer, il suffit de remplacer ces deux fichiers
+`public/images/logo.jpg` (carré, environ 320 × 320 px). Pour les changer, il suffit de remplacer ces deux fichiers
 en gardant les mêmes noms.
 
 Après ça, **plus besoin d'internet** : tout tourne sur le PC (base SQLite, aucun CDN, aucune police externe).

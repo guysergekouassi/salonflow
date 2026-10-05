@@ -50,7 +50,7 @@ svg.ico { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: non
     transition: transform .2s;
 }
 .sidebar .marque { display: flex; align-items: center; gap: 12px; padding: 20px 18px; }
-.sidebar .logo-image { width: 44px; height: 44px; border: 2px solid #fcc1c5; }
+.sidebar .logo-image { width: 44px; height: 44px; border: 2px solid #1f6b3a; }
 .sidebar .marque strong { color: #fff; font-size: 18px; display: block; }
 .sidebar .marque span { font-size: 12px; color: #94a3b8; }
 .sidebar .salon {
@@ -393,7 +393,7 @@ body.page-caisse .contenu { padding: 0; display: flex; min-height: 0; }
 /* ---------- Code PIN gérante ---------- */
 .pin-page { display: grid; place-items: center; padding: 24px 0; }
 .pin-boite { width: 100%; max-width: 340px; padding: 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.pin-boite .logo-image { width: 64px; height: 64px; border: 3px solid #fcc1c5; }
+.pin-boite .logo-image { width: 64px; height: 64px; border: 3px solid #1f6b3a; }
 .pin-boite h2 { font-size: 20px; }
 .pin-boite p { margin: 0 0 6px; }
 .pin-saisie { text-align: center; font-size: 28px !important; letter-spacing: .4em; font-weight: 800; max-width: 220px; }
