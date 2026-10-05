@@ -49,6 +49,31 @@ en gardant les mêmes noms.
 
 Après ça, **plus besoin d'internet** : tout tourne sur le PC (base SQLite, aucun CDN, aucune police externe).
 
+### Installation par clé USB (aucun téléchargement sur le PC du salon)
+
+Le PC du salon n'a besoin ni d'internet, ni de XAMPP, ni de Composer : PHP est fourni dans le dossier.
+
+**Sur un PC Windows avec internet** (une seule fois) :
+
+1. Récupérer le dossier du projet (sans `.env` ni `database/database.sqlite` d'un autre PC).
+2. Double-cliquer sur **`preparer-cle-usb.bat`**. Il télécharge dans le dossier :
+   - `php\` : PHP 8.3 portable, déjà réglé (SQLite activé) ;
+   - `outils\VC_redist.x64.exe` : bibliothèque Microsoft nécessaire à PHP ;
+   - `vendor\` : les dépendances du logiciel.
+3. Copier **tout le dossier** sur la clé USB.
+
+**Sur le PC du salon** (sans internet) :
+
+1. Copier le dossier de la clé vers `C:\SalonFlow`. Ne pas lancer depuis la clé : les ventes doivent rester sur le PC.
+2. Double-cliquer sur **`installer.bat`**. Il installe si besoin la bibliothèque Microsoft, crée le `.env`, la base,
+   le catalogue, le code PIN de départ (1234), puis l'icône **SalonFlow** sur le bureau.
+3. Ouvrir `.env` avec le Bloc-notes et mettre les informations du salon (voir ci-dessus).
+
+La caisse s'ouvre dans Chrome, ou dans **Microsoft Edge** (déjà présent sur Windows) si Chrome n'est pas installé.
+
+Pour une **mise à jour** : refaire `preparer-cle-usb.bat` avec la nouvelle version, puis copier sur le PC du salon
+tout sauf `.env` et `database\database.sqlite`. La base se met à jour toute seule au prochain démarrage.
+
 ## 2. Utilisation au quotidien
 
 - **Une seule fois** : double-cliquer sur **`creer-raccourci.bat`**. Il crée l'icône **SalonFlow** (avec le logo du salon)
@@ -181,6 +206,8 @@ public/css/app.css   styles (aucun CDN)
 public/js/caisse.js  écran de caisse
 resources/views/     caisse, tickets, dashboard, ventes, services, parametres, gerante
 demarrer-salon.bat   lance le serveur et la caisse
+preparer-cle-usb.bat prépare le dossier pour une installation par clé USB (PHP portable, dépendances)
+installer.bat        installe sur le PC du salon sans internet
 creer-raccourci.bat  crée l'icône SalonFlow sur le bureau et dans le menu Démarrer
 sauvegarder.bat      sauvegarde de la base
 ```

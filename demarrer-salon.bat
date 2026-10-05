@@ -5,22 +5,28 @@ cd /d "%~dp0"
 REM Port de la caisse : a changer ici si 8008 est deja pris par une autre application
 set PORT=8008
 
+REM PHP portable du dossier (installation par cle USB) s'il existe, sinon le PHP installe sur le PC
+set "PHP=php"
+if exist "php\php.exe" set "PHP=%CD%\php\php.exe"
+
 REM Met la base de donnees a jour apres une mise a jour du logiciel (sans effet si deja a jour)
-php artisan migrate --force >nul 2>&1
+"%PHP%" artisan migrate --force >nul 2>&1
 
 REM Demarre le serveur local dans une fenetre reduite, sauf s'il tourne deja
 netstat -ano | findstr /r /c:"127.0.0.1:%PORT% .*LISTENING" >nul
 if errorlevel 1 (
-    start "SalonFlow - serveur (ne pas fermer)" /min php artisan serve --host=127.0.0.1 --port=%PORT%
+    start "SalonFlow - serveur (ne pas fermer)" /min "%PHP%" artisan serve --host=127.0.0.1 --port=%PORT%
     REM Laisse 3 secondes au serveur pour demarrer
     timeout /t 3 /nobreak >nul
 )
 
-REM Ouvre Chrome en mode application (fenetre a part, avec le logo dans la barre des taches).
+REM Ouvre Chrome (ou Edge, deja present sur Windows) en mode application (fenetre a part, avec le logo dans la barre des taches).
 REM --kiosk-printing : le ticket part directement sur l'imprimante par defaut, sans boite de dialogue
 set CHROME="%ProgramFiles%\Google\Chrome\Application\chrome.exe"
 if not exist %CHROME% set CHROME="%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
 if not exist %CHROME% set CHROME="%LocalAppData%\Google\Chrome\Application\chrome.exe"
+if not exist %CHROME% set CHROME="%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
+if not exist %CHROME% set CHROME="%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"
 
 if exist %CHROME% (
     start "" %CHROME% --kiosk-printing --app=http://127.0.0.1:%PORT% --start-maximized
